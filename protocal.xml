@@ -1,0 +1,119 @@
+1007 查询设备运行状态协议交互：
+Request:
+<?xml version="1.0" encoding="UTF-8"?>
+<PatrolDevice>
+<Type>1007</Type>
+<Command>1</Command>
+<Time>2023-01-01 00:00:00</Time>
+<Items/>
+</PatrolDevice>
+Response:
+<?xml version="1.0" encoding="UTF-8"?>
+<PatrolDevice>
+<Type>1007</Type>
+<Command>1</Command>
+<Time>2023-01-01 00:00:01</Time>
+<Items>
+  <Value>0</Value>
+  <Status>0</Status> <!-- 导航任务执行状态: 执行完成=0，正在执行=1，无法执行=-1 -->
+  <ErrorCode>0</ErrorCode>
+</Items>
+</PatrolDevice>
+
+-----------------------------------------------------------------------------------------
+1003 下发导航任务协议交互：
+Request:
+<?xml version="1.0" encoding="UTF-8"?>
+<PatrolDevice>
+<Type>1003</Type>
+<Command>1</Command>
+<Time>2023-01-01 00:00:00</Time>
+  <Items> <!-- 导航任务列表 -->
+		<MapID>0</MapID>
+		<Value>1</Value>
+		<PosX>-4.2181582</PosX>
+		<PosY>3.4758759</PosY>
+		<PosZ>-0.056337897</PosZ>
+		<AngleYaw>-3.044234</AngleYaw>
+		<PointInfo>0</PointInfo>
+		<Gait>0</Gait>
+		<Speed>1</Speed>
+		<Manner>0</Manner>
+		<ObsMode>0</ObsMode>
+		<NavMode>0</NavMode>
+		<Terrain>0</Terrain>
+		<Posture>0</Posture>
+	</Items>
+  <Items> <!-- 导航任务列表 -->
+		<MapID>0</MapID>
+		<Value>2</Value>
+		<PosX>-9.1335344</PosX>
+		<PosY>2.9462891</PosY>
+		<PosZ>0.093159825</PosZ>
+		<AngleYaw>-1.4948614</AngleYaw>
+		<PointInfo>0</PointInfo>
+		<Gait>0</Gait>
+		<Speed>1</Speed>
+		<Manner>0</Manner>
+		<ObsMode>0</ObsMode>
+		<NavMode>0</NavMode>
+		<Terrain>0</Terrain>
+		<Posture>0</Posture>
+	</Items>
+</PatrolDevice>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<PatrolDevice>
+<Type>1003</Type>
+<Command>1</Command>
+<Time>2023-01-01 00:00:01</Time>
+<Items>
+  <Value>100</Value>
+  <ErrorCode>0</ErrorCode>   <!-- 成功=0，失败=1，取消=2 -->
+  <ErrorStatus>0</ErrorStatus> <!-- 错误状态: 查看后表 -->
+</Items>
+</PatrolDevice>
+
+ErrorStatus 的值对应的含义如下表所示：
+参数值 含义 参数值 含义
+0000 异常码默认值 41770 切换正常/匍匐身高状态失败
+8962 单点巡检任务被取消 41777 切换停避障模块的速度输入源失败
+8960 单点巡检任务执行完成 41778 设置地形图参数失败
+41729 运动状态异常，任务失败(软急停、摔倒) 41793 当前正在执行任务，下发新任务失败
+41730 电量过低，任务失败 41794 调度退出自主充电失败
+41731 电机过温异常，任务失败 41795 退出自主充电执行失败
+41732 正在使用充电器充电，任务失败 41796 调度进入自主充电失败
+41745 导航进程未启动，无法下发任务 41797 进入自主充电执行失败
+41746 导航模块通讯异常，无法下发任务 41798 退桩后重定位失败
+41747 定位状态持续异常(超过 30s) 41799 开启累积帧失败
+41748 地形模块状态异常 41800 关闭累积帧失败
+41761 发送起立失败 41801 切换地图失败
+41762 执行起立失败 41802 存在上位机连接断开，自动停止任务
+41763 切换力控失败 41803 持续停障异常，导航失败
+41764 切换行走模式失败 41804 导航全局规划失败
+41765 趴下失败 41805 持续导航速度未刷新，导航失败
+41766 被软急停 41806 自主充电流程中，下发任务失败
+41767 切换步态失败 41881 重定位失败
+41768 切换导航模式失败 41983 进程手动重启中，停止任务
+41769 切换手动模式失败
+
+-----------------------------------------------------------------------------------------
+1004  取消导航任务协议交互：
+Request:
+<?xml version="1.0" encoding="UTF-8"?>
+<PatrolDevice>
+<Type>1004</Type>
+<Command>1</Command>
+<Time>2023-01-01 00:00:00</Time>
+<Items/>
+</PatrolDevice>
+Response:
+<?xml version="1.0" encoding="UTF-8"?>
+<PatrolDevice>
+<Type>1004</Type>
+<Command>1</Command>
+<Time>2023-01-01 00:00:01</Time>
+<Items>
+ <ErrorCode>0</ErrorCode> <!-- 成功=0，失败=1 -->
+</Items>
+</PatrolDevice>
