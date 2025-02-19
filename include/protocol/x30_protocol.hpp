@@ -108,8 +108,8 @@ public:
     static std::unique_ptr<IMessage> parseMessage(const std::string& xml);
 };
 
-// 添加配置加载函数
-std::vector<NavigationPoint> loadDefaultNavigationPoints(const std::string& configPath);
+// // 添加配置加载函数
+// std::vector<NavigationPoint> loadDefaultNavigationPoints(const std::string& configPath);
 
 } // namespace protocol
 } // namespace x30

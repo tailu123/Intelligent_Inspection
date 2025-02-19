@@ -1,12 +1,15 @@
 #pragma once
 
+#include <atomic>
 #include <memory>
 #include <string>
 #include <vector>
 #include <functional>
-#include "../protocol/x30_protocol.hpp"
-#include "../state/x30_state_machine.hpp"
-#include "../communication/x30_communication.hpp"
+#include "protocol/x30_protocol.hpp"
+#include "state/x30_state_machine.hpp"
+#include "communication/x30_communication.hpp"
+#include "application/MessageQueue.hpp"
+
 
 namespace x30 {
 namespace application {
@@ -28,10 +31,6 @@ public:
     bool initialize(const std::string& host, uint16_t port);
     void shutdown();
 
-    // 巡检任务管理
-    bool startInspection(const std::vector<protocol::NavigationPoint>& points);
-    bool cancelInspection();
-    bool queryStatus();
 
     // 回调设置
     void setCallback(const InspectionCallback& callback);
@@ -40,17 +39,36 @@ public:
     bool isConnected() const;
     bool isInspecting() const;
 
+    // 新增统一消息处理接口
+    void handleCommand(std::unique_ptr<protocol::IMessage> command) {
+        message_queue_.push(std::move(command));
+    }
+
 private:
+    // 巡检任务管理
+    bool startInspection();
+    bool cancelInspection();
+    bool queryStatus();
+
     // 内部处理函数
     void handleMessage(std::unique_ptr<protocol::IMessage> message);
     void handleError(const std::string& error);
     void handleStateChange(const state::X30StateMachine& machine);
 
+    // 消息处理循环
+    void messageProcessingLoop();
+
     // 成员变量
     std::unique_ptr<communication::AsyncCommunicationManager> comm_manager_;
     std::unique_ptr<state::X30StateMachine> state_machine_;
     InspectionCallback callback_;
-    bool is_inspecting_;
+    std::atomic<bool> is_inspecting_;
+
+    // 消息队列
+    MessageQueue message_queue_;
+    std::thread message_thread_;
+    std::atomic<bool> running_{false};
+    std::vector<protocol::NavigationPoint> points_;
 };
 
 } // namespace application

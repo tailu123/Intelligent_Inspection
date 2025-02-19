@@ -131,16 +131,16 @@ struct X30StateMachine_ : public boost::msm::front::state_machine_def<X30StateMa
         //  +-----------+------------------+---------------+------------------------+----------------------+
 
         // 从空闲状态开始导航
-        boost::msm::front::Row<StateIdle, EvNavigationStart, StateNavigating, start_navigation_action, has_valid_points_guard>,
+        boost::msm::front::Row<StateIdle,       EvNavigationStart,      StateNavigating, start_navigation_action,       has_valid_points_guard>,
 
         // 取消导航任务
-        boost::msm::front::Row<StateNavigating, EvNavigationCancel, StateIdle, cancel_navigation_action, always_true_guard>,
+        boost::msm::front::Row<StateNavigating, EvNavigationCancel,     StateIdle,       cancel_navigation_action,      always_true_guard>,
 
         // 导航任务完成
-        boost::msm::front::Row<StateNavigating, EvNavigationComplete, StateIdle, complete_navigation_action, always_true_guard>,
+        boost::msm::front::Row<StateNavigating, EvNavigationComplete,   StateIdle,       complete_navigation_action,    always_true_guard>,
 
         // 导航任务出错
-        boost::msm::front::Row<StateNavigating, EvNavigationError, StateError, handle_error_action, always_true_guard>
+        boost::msm::front::Row<StateNavigating, EvNavigationError,      StateError,      handle_error_action,           always_true_guard>
     > {};
 
     // 为了提高可读性，定义一个别名

@@ -29,7 +29,6 @@ public:
         waitForConnection();
         std::cout << "已连接到设备\n";
 
-        loadNavigationPoints();
         return true;
     }
 
@@ -77,40 +76,18 @@ private:
         }
     }
 
-    // 加载导航点
-    void loadNavigationPoints() {
-        std::filesystem::path exePath = std::filesystem::canonical("/proc/self/exe");
-        std::filesystem::path projectRoot = exePath.parent_path().parent_path();
-        std::filesystem::path configPath = projectRoot / "config" / "default_params.json";
-
-        points_ = protocol::loadDefaultNavigationPoints(configPath.string());
-        if (points_.empty()) {
-            std::cout << "警告: 未能加载默认导航点，将使用示例导航点\n";
-            points_ = {
-                {0, 1, -4.2181582, 3.4758759, -0.056337897, -3.044234, 0, 0, 1, 0, 0, 0, 0, 0},
-                {0, 2, -9.1335344, 2.9462891, 0.093159825, -1.4948614, 0, 0, 1, 0, 0, 0, 0, 0}
-            };
-        }
-    }
-
     // 处理用户命令
     CommandResult handleCommand(const std::string& command) {
         if (command == "start") {
-            if (system_.startInspection(points_)) {
-                std::cout << "正在启动巡检任务...\n";
-            }
+            system_.handleCommand(std::make_unique<protocol::NavigationTaskMessage>());
             return CommandResult::CONTINUE;
         }
         else if (command == "cancel") {
-            if (system_.cancelInspection()) {
-                std::cout << "正在取消巡检任务...\n";
-            }
+            system_.handleCommand(std::make_unique<protocol::CancelTaskMessage>());
             return CommandResult::CONTINUE;
         }
         else if (command == "status") {
-            if (system_.queryStatus()) {
-                std::cout << "正在查询状态...\n";
-            }
+            system_.handleCommand(std::make_unique<protocol::QueryStatusMessage>());
             return CommandResult::CONTINUE;
         }
         else if (command == "quit") {
@@ -143,7 +120,6 @@ private:
 
 private:
     application::X30InspectionSystem system_;
-    std::vector<protocol::NavigationPoint> points_;
 };
 
 } // namespace x30

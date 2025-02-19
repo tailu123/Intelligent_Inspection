@@ -1,20 +1,23 @@
 #pragma once
 
+#include <atomic>
 #include <boost/asio.hpp>
 #include <memory>
 #include <queue>
 #include <functional>
+#include <thread>
 #include "../protocol/x30_protocol.hpp"
 
 namespace x30 {
 namespace communication {
 
-class X30Communication {
+class X30Communication : public std::enable_shared_from_this<X30Communication> {
 public:
     using MessageCallback = std::function<void(std::unique_ptr<protocol::IMessage>)>;
     using ErrorCallback = std::function<void(const std::string&)>;
 
     X30Communication(boost::asio::io_context& io_context);
+
     ~X30Communication();
 
     // 连接管理
@@ -28,7 +31,6 @@ public:
     // 回调设置
     void setMessageCallback(MessageCallback callback);
     void setErrorCallback(ErrorCallback callback);
-
 private:
     // 内部实现
     void doConnect(const boost::asio::ip::tcp::endpoint& endpoint);
@@ -41,9 +43,10 @@ private:
     // 成员变量
     boost::asio::io_context& io_context_;
     boost::asio::ip::tcp::socket socket_;
+    boost::asio::strand<boost::asio::io_context::executor_type> strand_;
     boost::asio::streambuf read_buffer_;
     std::queue<std::string> write_queue_;
-    bool is_writing_;
+    std::atomic<bool> is_writing_{false};
 
     MessageCallback message_callback_;
     ErrorCallback error_callback_;
@@ -63,9 +66,10 @@ public:
     std::shared_ptr<X30Communication> getCommunication();
 
 private:
-    boost::asio::io_context io_context_;
-    std::unique_ptr<boost::asio::io_context::work> work_;
+    std::unique_ptr<boost::asio::io_context> io_context_;
+    // boost::asio::strand<boost::asio::io_context::executor_type> strand_;
     std::thread io_thread_;
+    std::unique_ptr<boost::asio::io_context::work> work_;
     std::shared_ptr<X30Communication> communication_;
 };
 

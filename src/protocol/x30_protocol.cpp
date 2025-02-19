@@ -10,13 +10,13 @@
 namespace x30::protocol {
 
 // 辅助函数：获取当前时间戳
-static std::string getCurrentTimestamp() {
-    auto now = std::chrono::system_clock::now();
-    auto time = std::chrono::system_clock::to_time_t(now);
-    std::stringstream ss;
-    ss << std::put_time(std::localtime(&time), "%Y-%m-%d %H:%M:%S");
-    return ss.str();
-}
+// static std::string getCurrentTimestamp() {
+//     auto now = std::chrono::system_clock::now();
+//     auto time = std::chrono::system_clock::to_time_t(now);
+//     std::stringstream ss;
+//     ss << std::put_time(std::localtime(&time), "%Y-%m-%d %H:%M:%S");
+//     return ss.str();
+// }
 
 // NavigationTaskMessage实现
 std::string NavigationTaskMessage::serialize() const {
@@ -191,30 +191,30 @@ std::unique_ptr<IMessage> MessageFactory::parseMessage(const std::string& xml) {
     return nullptr;
 }
 
-std::vector<NavigationPoint> loadDefaultNavigationPoints(const std::string& configPath) {
-    std::vector<NavigationPoint> points;
-    try {
-        // 检查文件是否存在
-        if (!std::filesystem::exists(configPath)) {
-            std::cerr << "配置文件不存在: " << configPath << std::endl;
-            return points;
-        }
+// std::vector<NavigationPoint> loadDefaultNavigationPoints(const std::string& configPath) {
+//     std::vector<NavigationPoint> points;
+//     try {
+//         // 检查文件是否存在
+//         if (!std::filesystem::exists(configPath)) {
+//             std::cerr << "配置文件不存在: " << configPath << std::endl;
+//             return points;
+//         }
 
-        // 读取JSON文件
-        std::ifstream file(configPath);
-        nlohmann::json jsonArray;
-        file >> jsonArray;
+//         // 读取JSON文件
+//         std::ifstream file(configPath);
+//         nlohmann::json jsonArray;
+//         file >> jsonArray;
 
-        // 解析每个导航点
-        for (const auto& jsonPoint : jsonArray) {
-            points.push_back(NavigationPoint::fromJson(jsonPoint));
-        }
+//         // 解析每个导航点
+//         for (const auto& jsonPoint : jsonArray) {
+//             points.push_back(NavigationPoint::fromJson(jsonPoint));
+//         }
 
-        std::cout << "成功从配置文件加载了 " << points.size() << " 个导航点" << std::endl;
-    } catch (const std::exception& e) {
-        std::cerr << "加载配置文件失败: " << e.what() << std::endl;
-    }
-    return points;
-}
+//         std::cout << "成功从配置文件加载了 " << points.size() << " 个导航点" << std::endl;
+//     } catch (const std::exception& e) {
+//         std::cerr << "加载配置文件失败: " << e.what() << std::endl;
+//     }
+//     return points;
+// }
 
 } // namespace protocol
