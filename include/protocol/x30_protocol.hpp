@@ -11,9 +11,15 @@ namespace protocol {
 
 // 消息类型枚举
 enum class MessageType {
-    NAVIGATION_TASK = 1003,
-    CANCEL_TASK = 1004,
-    QUERY_STATUS = 1007
+    // 请求消息类型
+    NAVIGATION_TASK_REQ = 1003,
+    CANCEL_TASK_REQ = 1004,
+    QUERY_STATUS_REQ = 1007,
+
+    // 响应消息类型
+    NAVIGATION_TASK_RESP = 2003,
+    CANCEL_TASK_RESP = 2004,
+    QUERY_STATUS_RESP = 2007
 };
 
 // 错误码枚举
@@ -21,6 +27,13 @@ enum class ErrorCode {
     SUCCESS = 0,
     FAILURE = 1,
     CANCELLED = 2
+};
+
+// 导航任务状态枚举
+enum class NavigationStatus {
+    COMPLETED = 0,      // 执行完成
+    EXECUTING = 1,      // 正在执行
+    FAILED = -1        // 无法执行
 };
 
 // 导航点信息
@@ -74,10 +87,12 @@ protected:
     virtual std::string serializeToXml() const = 0;
 };
 
-// 导航任务消息
-class NavigationTaskMessage : public IMessage {
+// =============== 请求消息定义 ===============
+
+// 导航任务请求消息
+class NavigationTaskRequest : public IMessage {
 public:
-    MessageType getType() const override { return MessageType::NAVIGATION_TASK; }
+    MessageType getType() const override { return MessageType::NAVIGATION_TASK_REQ; }
     std::string serializeToXml() const override;
     bool deserialize(const std::string& xml) override;
 
@@ -85,23 +100,62 @@ public:
     std::string timestamp;
 };
 
-// 取消任务消息
-class CancelTaskMessage : public IMessage {
+// 取消任务请求消息
+class CancelTaskRequest : public IMessage {
 public:
-    MessageType getType() const override { return MessageType::CANCEL_TASK; }
+    MessageType getType() const override { return MessageType::CANCEL_TASK_REQ; }
     std::string serializeToXml() const override;
     bool deserialize(const std::string& xml) override;
 
     std::string timestamp;
 };
 
-// 查询状态消息
-class QueryStatusMessage : public IMessage {
+// 查询状态请求消息
+class QueryStatusRequest : public IMessage {
 public:
-    MessageType getType() const override { return MessageType::QUERY_STATUS; }
+    MessageType getType() const override { return MessageType::QUERY_STATUS_REQ; }
     std::string serializeToXml() const override;
     bool deserialize(const std::string& xml) override;
 
+    std::string timestamp;
+};
+
+// =============== 响应消息定义 ===============
+
+// 导航任务响应消息
+class NavigationTaskResponse : public IMessage {
+public:
+    MessageType getType() const override { return MessageType::NAVIGATION_TASK_RESP; }
+    std::string serializeToXml() const override;
+    bool deserialize(const std::string& xml) override;
+
+    int value;                  // 任务值
+    ErrorCode errorCode;        // 错误码: 成功=0，失败=1，取消=2
+    int errorStatus;           // 错误状态码，参考错误状态表
+    std::string timestamp;
+};
+
+// 取消任务响应消息
+class CancelTaskResponse : public IMessage {
+public:
+    MessageType getType() const override { return MessageType::CANCEL_TASK_RESP; }
+    std::string serializeToXml() const override;
+    bool deserialize(const std::string& xml) override;
+
+    ErrorCode errorCode;        // 错误码: 成功=0，失败=1
+    std::string timestamp;
+};
+
+// 查询状态响应消息
+class QueryStatusResponse : public IMessage {
+public:
+    MessageType getType() const override { return MessageType::QUERY_STATUS_RESP; }
+    std::string serializeToXml() const override;
+    bool deserialize(const std::string& xml) override;
+
+    int value;                  // 状态值
+    NavigationStatus status;    // 导航任务执行状态
+    ErrorCode errorCode;        // 错误码
     std::string timestamp;
 };
 
@@ -110,6 +164,22 @@ class MessageFactory {
 public:
     static std::unique_ptr<IMessage> createMessage(MessageType type);
     static std::unique_ptr<IMessage> parseMessage(const std::string& xml);
+
+private:
+    static std::unique_ptr<IMessage> createRequestMessage(MessageType type);
+    static std::unique_ptr<IMessage> createResponseMessage(MessageType type);
+};
+
+// 错误状态码定义
+struct ErrorStatus {
+    static constexpr int DEFAULT = 0;                    // 异常码默认值
+    static constexpr int TASK_CANCELLED = 8962;         // 单点巡检任务被取消
+    static constexpr int TASK_COMPLETED = 8960;         // 单点巡检任务执行完成
+    static constexpr int MOTION_ERROR = 41729;          // 运动状态异常，任务失败(软急停、摔倒)
+    static constexpr int LOW_BATTERY = 41730;           // 电量过低，任务失败
+    static constexpr int MOTOR_OVERHEAT = 41731;        // 电机过温异常，任务失败
+    static constexpr int CHARGING = 41732;              // 正在使用充电器充电，任务失败
+    // ... 其他错误状态码定义
 };
 
 } // namespace protocol

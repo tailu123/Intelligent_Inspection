@@ -1,170 +1,231 @@
-# X30巡检系统架构设计
+# X30巡检系统架构设计文档
 
-## 系统架构图
+## 1. 系统概述
+
+### 1.1 设计目标
+X30巡检系统旨在提供一个高性能、可靠且可扩展的智能巡检解决方案。系统基于C++17开发，采用现代C++特性和设计模式，实现了一个模块化、松耦合的分层架构。
+
+### 1.2 关键特性
+- 高性能异步通信架构
+- 状态机驱动的业务流程
+- 可扩展的插件系统
+- 完善的错误处理机制
+- 基于事件的消息处理
+
+## 2. 系统架构
+
+### 2.1 整体架构图
 
 ```mermaid
 graph TB
-    subgraph 应用层
-        App[InspectionApp]
-        CLI[命令行界面]
-        App --> CLI
+    subgraph "应用层 (Application Layer)"
+        A1[InspectionApp]
+        A2[命令行界面]
+        A3[系统初始化]
+        A1 --> A2
+        A1 --> A3
     end
 
-    subgraph 业务逻辑层
-        System[X30InspectionSystem]
-        StateMachine[状态机]
-        Callback[回调处理]
-        System --> StateMachine
-        System --> Callback
+    subgraph "业务逻辑层 (Business Logic Layer)"
+        B1[X30InspectionSystem]
+        B2[状态机管理]
+        B3[任务管理]
+        B4[消息队列]
+        B1 --> B2
+        B1 --> B3
+        B1 --> B4
     end
 
-    subgraph 通信层
-        Comm[X30Communication]
-        Protocol[通信协议]
-        Comm --> Protocol
+    subgraph "通信层 (Communication Layer)"
+        C1[AsyncCommunicationManager]
+        C2[X30Communication]
+        C3[消息处理器]
+        C1 --> C2
+        C2 --> C3
     end
 
-    subgraph 数据层
-        Config[配置管理]
-        Messages[消息定义]
-        NavPoints[导航点]
+    subgraph "数据层 (Data Layer)"
+        D1[配置管理]
+        D2[导航点数据]
+        D3[系统状态]
+        D1 --> D2
+        D1 --> D3
     end
 
-    App --> System
-    System --> Comm
-    System --> Config
-    Comm --> Messages
-    Config --> NavPoints
-
-    classDef layer fill:#f9f,stroke:#333,stroke-width:2px;
-    class App,System,Comm,Config layer;
+    A1 --> B1
+    B1 --> C1
+    C1 --> D1
 ```
 
-## 模块说明
+### 2.2 核心模块说明
 
-### 1. 应用层
-- **InspectionApp**: 应用程序主类，负责整体流程控制
-  - 初始化系统
-  - 处理用户命令
-  - 管理系统生命周期
-- **命令行界面**: 提供用户交互功能
-  - 显示系统状态
-  - 接收用户命令
-  - 展示执行结果
+#### 2.2.1 应用层 (Application Layer)
+- **职责**：用户交互、系统初始化、任务调度
+- **关键组件**：
+  - `InspectionApp`: 应用程序主类
+  - `CommandLineInterface`: 命令行交互接口
+  - `SystemInitializer`: 系统初始化管理
 
-### 2. 业务逻辑层
-- **X30InspectionSystem**: 核心业务逻辑处理
-  - 管理巡检任务
-  - 处理系统状态
-  - 协调各模块工作
-- **状态机**: 管理系统状态转换
-  - 空闲状态
-  - 导航状态
-  - 错误状态
-- **回调处理**: 处理异步事件
-  - 任务开始/完成通知
-  - 错误处理
-  - 状态更新
+#### 2.2.2 业务逻辑层 (Business Logic Layer)
+- **职责**：业务流程控制、状态管理、任务处理
+- **关键组件**：
+  - `X30InspectionSystem`: 核心业务处理器
+  - `X30StateMachine`: 状态机管理器
+  - `TaskManager`: 任务管理器
+  - `MessageQueue`: 消息队列处理器
 
-### 3. 通信层
-- **X30Communication**: 负责网络通信
-  - TCP连接管理
-  - 数据收发
-  - 心跳维护
-- **通信协议**: 实现消息协议
-  - 消息序列化
-  - 消息解析
-  - 协议验证
+#### 2.2.3 通信层 (Communication Layer)
+- **职责**：网络通信、协议处理、消息分发
+- **关键组件**：
+  - `AsyncCommunicationManager`: 异步通信管理器
+  - `X30Communication`: TCP通信实现
+  - `MessageProcessor`: 消息处理器
 
-### 4. 数据层
-- **配置管理**: 处理系统配置
-  - 读取配置文件
-  - 解析配置项
-  - 配置验证
-- **消息定义**: 定义通信消息
-  - 导航任务消息
-  - 取消任务消息
-  - 状态查询消息
-- **导航点**: 管理导航数据
-  - 导航点定义
-  - 路径规划
-  - 数据验证
+#### 2.2.4 数据层 (Data Layer)
+- **职责**：数据持久化、配置管理、状态存储
+- **关键组件**：
+  - `ConfigurationManager`: 配置管理器
+  - `NavigationPointManager`: 导航点管理
+  - `StateRepository`: 状态存储库
 
-## 文件结构
+## 3. 核心流程设计
 
-```
-Intelligent_Inspection/
-├── include/
-│   ├── application/
-│   │   └── x30_inspection_system.hpp
-│   ├── communication/
-│   │   └── x30_communication.hpp
-│   ├── protocol/
-│   │   └── x30_protocol.hpp
-│   └── state/
-│       └── x30_state_machine.hpp
-├── src/
-│   ├── application/
-│   │   └── x30_inspection_system.cpp
-│   ├── communication/
-│   │   └── x30_communication.cpp
-│   ├── protocol/
-│   │   └── x30_protocol.cpp
-│   └── main.cpp
-├── config/
-│   └── default_params.json
-├── docs/
-│   └── architecture.md
-└── CMakeLists.txt
+### 3.1 状态机设计
+```mermaid
+stateDiagram-v2
+    [*] --> Idle
+    Idle --> Navigating: EvNavigationStart
+    Navigating --> Idle: EvNavigationComplete
+    Navigating --> Idle: EvNavigationCancel
+    Navigating --> Error: EvNavigationError
+    Error --> Idle: EvReset
 ```
 
-## 数据流
+### 3.2 消息处理流程
+```mermaid
+sequenceDiagram
+    participant Client
+    participant App as InspectionApp
+    participant System as X30InspectionSystem
+    participant Comm as AsyncCommunicationManager
 
-1. 用户输入命令 → InspectionApp
-2. InspectionApp → X30InspectionSystem
-3. X30InspectionSystem → 状态机处理
-4. X30InspectionSystem → X30Communication
-5. X30Communication ←→ 远程设备
-
-## 扩展性设计
-
-1. 命令处理机制支持轻松添加新命令
-2. 状态机设计允许增加新的状态和转换
-3. 通信协议支持新消息类型扩展
-4. 配置管理支持灵活的配置项添加
-
-## 错误处理
-
-1. 异常捕获和处理机制
-2. 状态机错误状态处理
-3. 网络通信错误恢复
-4. 配置错误检测和报告
-
-
-这样改进后的系统有以下优点：
-
-1. **统一的消息处理模型**
-   - 所有输入（用户命令和网络响应）都通过消息队列处理
-   - 消除了同步调用和异步回调的不一致性
-
-2. **更好的并发控制**
-   - 所有操作都在消息处理线程中执行
-   - 避免了多线程并发访问的问题
-
-3. **更清晰的责任划分**
-   - App层只负责转换用户操作为消息
-   - X30InspectionSystem专注于消息处理逻辑
-
-4. **更容易扩展**
-   - 添加新功能只需定义新的命令消息类型
-   - 消息处理逻辑集中在一处
-
-数据流变成：
+    Client->>App: 发送命令
+    App->>System: 创建消息
+    System->>System: 消息入队
+    System->>Comm: 异步发送
+    Comm-->>System: 响应回调
+    System-->>App: 状态更新
+    App-->>Client: 显示结果
 ```
-App命令 -> 消息队列 <- 网络响应
-               |
-               v
-        消息处理线程
-               |
-               v
-         事件总线分发
+
+## 4. 关键技术实现
+
+### 4.1 异步通信实现
+```cpp
+class AsyncCommunicationManager {
+    boost::asio::io_context io_context_;
+    std::unique_ptr<boost::asio::io_context::work> work_;
+    std::thread io_thread_;
+    // ...
+};
+```
+
+### 4.2 状态机实现
+```cpp
+struct X30StateMachine_ : public boost::msm::front::state_machine_def<X30StateMachine_> {
+    typedef StateIdle initial_state;
+    struct transition_table : boost::mpl::vector<
+        _row<StateIdle, EvNavigationStart, StateNavigating>,
+        _row<StateNavigating, EvNavigationComplete, StateIdle>,
+        // ...
+    > {};
+};
+```
+
+### 4.3 消息队列实现
+```cpp
+template<typename T>
+class ThreadSafeQueue {
+    std::mutex mutex_;
+    std::condition_variable not_empty_;
+    std::queue<T> queue_;
+    // ...
+};
+```
+
+## 5. 性能优化设计
+
+### 5.1 内存管理
+- 使用智能指针管理资源
+- 对象池复用机制
+- 内存对齐优化
+
+### 5.2 并发控制
+- 基于strand的线程同步
+- 无锁队列设计
+- 异步操作链
+
+### 5.3 I/O优化
+- 零拷贝技术
+- 缓冲区管理
+- 异步I/O操作
+
+## 6. 可扩展性设计
+
+### 6.1 插件系统
+- 动态加载机制
+- 插件注册框架
+- 接口适配器
+
+### 6.2 配置系统
+- JSON配置文件
+- 动态参数调整
+- 热加载支持
+
+## 7. 错误处理机制
+
+### 7.1 异常处理
+- 分层异常处理
+- 错误码映射
+- 日志记录
+
+### 7.2 故障恢复
+- 状态恢复机制
+- 断线重连
+- 数据一致性保证
+
+## 8. 开发规范
+
+### 8.1 代码规范
+- Google C++风格指南
+- 命名约定
+- 注释规范
+
+### 8.2 版本控制
+- Git分支管理
+- 代码审查流程
+- 持续集成
+
+## 9. 部署架构
+
+### 9.1 运行环境
+- 操作系统要求
+- 依赖库版本
+- 硬件需求
+
+### 9.2 监控系统
+- 性能监控
+- 日志收集
+- 告警机制
+
+## 10. 安全设计
+
+### 10.1 通信安全
+- 数据加密
+- 身份认证
+- 访问控制
+
+### 10.2 数据安全
+- 数据备份
+- 权限管理
+- 敏感信息保护

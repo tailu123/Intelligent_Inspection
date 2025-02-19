@@ -19,6 +19,7 @@ public:
     // 初始化应用程序
     bool initialize(const std::string& host, uint16_t port) {
         setupCallbacks();
+        setupEventHandlers();
 
         if (!system_.initialize(host, port)) {
             std::cout << "系统初始化失败\n";
@@ -69,6 +70,47 @@ private:
         system_.setCallback(callback);
     }
 
+    // 设置事件处理器
+    void setupEventHandlers() {
+        // 订阅导航任务响应事件
+        system_.subscribeEvent<application::MessageResponseEvent>(
+            [](const std::shared_ptr<application::Event>& event) {
+                auto respEvent = std::static_pointer_cast<application::MessageResponseEvent>(event);
+                std::cout << "收到响应: " << respEvent->data <<
+                    (respEvent->success ? " (成功)" : " (失败)") << std::endl;
+            }
+        );
+
+        // 订阅连接状态事件
+        system_.subscribeEvent<application::ConnectionStatusEvent>(
+            [](const std::shared_ptr<application::Event>& event) {
+                auto connEvent = std::static_pointer_cast<application::ConnectionStatusEvent>(event);
+                std::cout << "连接状态: " <<
+                    (connEvent->connected ? "已连接" : "已断开") <<
+                    " - " << connEvent->message << std::endl;
+            }
+        );
+
+        // 订阅导航状态事件
+        system_.subscribeEvent<application::NavigationStatusEvent>(
+            [](const std::shared_ptr<application::Event>& event) {
+                auto navEvent = std::static_pointer_cast<application::NavigationStatusEvent>(event);
+                std::cout << "导航状态: " << navEvent->status <<
+                    (navEvent->completed ? " (已完成)" : "") <<
+                    " - 当前点: " << navEvent->currentPoint << std::endl;
+            }
+        );
+
+        // 订阅错误事件
+        system_.subscribeEvent<application::ErrorEvent>(
+            [](const std::shared_ptr<application::Event>& event) {
+                auto errorEvent = std::static_pointer_cast<application::ErrorEvent>(event);
+                std::cout << "错误事件: [" << errorEvent->code << "] " <<
+                    errorEvent->message << std::endl;
+            }
+        );
+    }
+
     // 等待连接建立
     void waitForConnection() {
         while (!system_.isConnected()) {
@@ -79,15 +121,15 @@ private:
     // 处理用户命令
     CommandResult handleCommand(const std::string& command) {
         if (command == "start") {
-            system_.handleCommand(std::make_unique<protocol::NavigationTaskMessage>());
+            system_.handleCommand(std::make_unique<protocol::NavigationTaskRequest>());
             return CommandResult::CONTINUE;
         }
         else if (command == "cancel") {
-            system_.handleCommand(std::make_unique<protocol::CancelTaskMessage>());
+            system_.handleCommand(std::make_unique<protocol::CancelTaskRequest>());
             return CommandResult::CONTINUE;
         }
         else if (command == "status") {
-            system_.handleCommand(std::make_unique<protocol::QueryStatusMessage>());
+            system_.handleCommand(std::make_unique<protocol::QueryStatusRequest>());
             return CommandResult::CONTINUE;
         }
         else if (command == "quit") {
@@ -115,7 +157,8 @@ private:
                   << "1. start - 开始巡检任务\n"
                   << "2. cancel - 取消巡检任务\n"
                   << "3. status - 查询状态\n"
-                  << "4. quit - 退出程序\n";
+                  << "4. help - 显示此帮助信息\n"
+                  << "5. quit - 退出程序\n";
     }
 
 private:

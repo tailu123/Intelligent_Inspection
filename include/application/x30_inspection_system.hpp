@@ -9,7 +9,7 @@
 #include "state/x30_state_machine.hpp"
 #include "communication/x30_communication.hpp"
 #include "application/MessageQueue.hpp"
-
+#include "application/event_bus.hpp"
 
 namespace x30 {
 namespace application {
@@ -31,7 +31,6 @@ public:
     bool initialize(const std::string& host, uint16_t port);
     void shutdown();
 
-
     // 回调设置
     void setCallback(const InspectionCallback& callback);
 
@@ -42,6 +41,22 @@ public:
     // 新增统一消息处理接口
     void handleCommand(std::unique_ptr<protocol::IMessage> command) {
         message_queue_.push(std::move(command));
+    }
+
+    // 事件总线相关方法
+    template<typename T>
+    std::string subscribeEvent(std::function<void(const std::shared_ptr<Event>&)> handler) {
+        return EventBus::getInstance().subscribe<T>(handler);
+    }
+
+    void unsubscribeEvent(const std::string& eventType, const std::string& handlerId) {
+        EventBus::getInstance().unsubscribe(eventType, handlerId);
+    }
+
+protected:
+    // 事件发布方法
+    void publishEvent(const std::shared_ptr<Event>& event) {
+        EventBus::getInstance().publish(event);
     }
 
 private:
@@ -57,6 +72,11 @@ private:
 
     // 消息处理循环
     void messageProcessingLoop();
+
+    // 事件处理方法
+    void handleMessageResponse(const protocol::IMessage& message);
+    void handleConnectionStatus(bool connected, const std::string& message);
+    void handleNavigationStatus(bool completed, const std::string& point, const std::string& status);
 
     // 成员变量
     std::unique_ptr<communication::AsyncCommunicationManager> comm_manager_;

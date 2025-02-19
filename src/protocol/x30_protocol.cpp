@@ -22,12 +22,14 @@ std::string IMessage::serialize() const {
     return result;
 }
 
-// NavigationTaskMessage实现
-std::string NavigationTaskMessage::serializeToXml() const {
+// =============== 请求消息实现 ===============
+
+// NavigationTaskRequest实现
+std::string NavigationTaskRequest::serializeToXml() const {
     std::stringstream xml;
     xml << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
     xml << "<PatrolDevice>\n";
-    xml << "<Type>" << static_cast<int>(MessageType::NAVIGATION_TASK) << "</Type>\n";
+    xml << "<Type>" << static_cast<int>(MessageType::NAVIGATION_TASK_REQ) << "</Type>\n";
     xml << "<Command>1</Command>\n";
     xml << "<Time>" << timestamp << "</Time>\n";
 
@@ -54,7 +56,7 @@ std::string NavigationTaskMessage::serializeToXml() const {
     return xml.str();
 }
 
-bool NavigationTaskMessage::deserialize(const std::string& xml) {
+bool NavigationTaskRequest::deserialize(const std::string& xml) {
     rapidxml::xml_document<> doc;
     try {
         doc.parse<0>(const_cast<char*>(xml.c_str()));
@@ -102,12 +104,12 @@ bool NavigationTaskMessage::deserialize(const std::string& xml) {
     }
 }
 
-// CancelTaskMessage实现
-std::string CancelTaskMessage::serializeToXml() const {
+// CancelTaskRequest实现
+std::string CancelTaskRequest::serializeToXml() const {
     std::stringstream xml;
     xml << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
     xml << "<PatrolDevice>\n";
-    xml << "<Type>" << static_cast<int>(MessageType::CANCEL_TASK) << "</Type>\n";
+    xml << "<Type>" << static_cast<int>(MessageType::CANCEL_TASK_REQ) << "</Type>\n";
     xml << "<Command>1</Command>\n";
     xml << "<Time>" << timestamp << "</Time>\n";
     xml << "<Items/>\n";
@@ -115,7 +117,7 @@ std::string CancelTaskMessage::serializeToXml() const {
     return xml.str();
 }
 
-bool CancelTaskMessage::deserialize(const std::string& xml) {
+bool CancelTaskRequest::deserialize(const std::string& xml) {
     rapidxml::xml_document<> doc;
     try {
         doc.parse<0>(const_cast<char*>(xml.c_str()));
@@ -131,12 +133,12 @@ bool CancelTaskMessage::deserialize(const std::string& xml) {
     }
 }
 
-// QueryStatusMessage实现
-std::string QueryStatusMessage::serializeToXml() const {
+// QueryStatusRequest实现
+std::string QueryStatusRequest::serializeToXml() const {
     std::stringstream xml;
     xml << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
     xml << "<PatrolDevice>\n";
-    xml << "<Type>" << static_cast<int>(MessageType::QUERY_STATUS) << "</Type>\n";
+    xml << "<Type>" << static_cast<int>(MessageType::QUERY_STATUS_REQ) << "</Type>\n";
     xml << "<Command>1</Command>\n";
     xml << "<Time>" << timestamp << "</Time>\n";
     xml << "<Items/>\n";
@@ -144,7 +146,7 @@ std::string QueryStatusMessage::serializeToXml() const {
     return xml.str();
 }
 
-bool QueryStatusMessage::deserialize(const std::string& xml) {
+bool QueryStatusRequest::deserialize(const std::string& xml) {
     rapidxml::xml_document<> doc;
     try {
         doc.parse<0>(const_cast<char*>(xml.c_str()));
@@ -153,6 +155,135 @@ bool QueryStatusMessage::deserialize(const std::string& xml) {
 
         auto timeNode = root->first_node("Time");
         if (timeNode) timestamp = timeNode->value();
+
+        return true;
+    } catch (const rapidxml::parse_error& e) {
+        return false;
+    }
+}
+
+// =============== 响应消息实现 ===============
+
+// NavigationTaskResponse实现
+std::string NavigationTaskResponse::serializeToXml() const {
+    std::stringstream xml;
+    xml << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+    xml << "<PatrolDevice>\n";
+    xml << "<Type>" << static_cast<int>(MessageType::NAVIGATION_TASK_RESP) << "</Type>\n";
+    xml << "<Command>1</Command>\n";
+    xml << "<Time>" << timestamp << "</Time>\n";
+    xml << "<Items>\n";
+    xml << "  <Value>" << value << "</Value>\n";
+    xml << "  <ErrorCode>" << static_cast<int>(errorCode) << "</ErrorCode>\n";
+    xml << "  <ErrorStatus>" << errorStatus << "</ErrorStatus>\n";
+    xml << "</Items>\n";
+    xml << "</PatrolDevice>";
+    return xml.str();
+}
+
+bool NavigationTaskResponse::deserialize(const std::string& xml) {
+    rapidxml::xml_document<> doc;
+    try {
+        doc.parse<0>(const_cast<char*>(xml.c_str()));
+        auto root = doc.first_node("PatrolDevice");
+        if (!root) return false;
+
+        auto timeNode = root->first_node("Time");
+        if (timeNode) timestamp = timeNode->value();
+
+        auto itemsNode = root->first_node("Items");
+        if (itemsNode) {
+            auto valueNode = itemsNode->first_node("Value");
+            if (valueNode) value = std::stoi(valueNode->value());
+
+            auto errorCodeNode = itemsNode->first_node("ErrorCode");
+            if (errorCodeNode) errorCode = static_cast<ErrorCode>(std::stoi(errorCodeNode->value()));
+
+            auto errorStatusNode = itemsNode->first_node("ErrorStatus");
+            if (errorStatusNode) errorStatus = std::stoi(errorStatusNode->value());
+        }
+
+        return true;
+    } catch (const rapidxml::parse_error& e) {
+        return false;
+    }
+}
+
+// CancelTaskResponse实现
+std::string CancelTaskResponse::serializeToXml() const {
+    std::stringstream xml;
+    xml << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+    xml << "<PatrolDevice>\n";
+    xml << "<Type>" << static_cast<int>(MessageType::CANCEL_TASK_RESP) << "</Type>\n";
+    xml << "<Command>1</Command>\n";
+    xml << "<Time>" << timestamp << "</Time>\n";
+    xml << "<Items>\n";
+    xml << "  <ErrorCode>" << static_cast<int>(errorCode) << "</ErrorCode>\n";
+    xml << "</Items>\n";
+    xml << "</PatrolDevice>";
+    return xml.str();
+}
+
+bool CancelTaskResponse::deserialize(const std::string& xml) {
+    rapidxml::xml_document<> doc;
+    try {
+        doc.parse<0>(const_cast<char*>(xml.c_str()));
+        auto root = doc.first_node("PatrolDevice");
+        if (!root) return false;
+
+        auto timeNode = root->first_node("Time");
+        if (timeNode) timestamp = timeNode->value();
+
+        auto itemsNode = root->first_node("Items");
+        if (itemsNode) {
+            auto errorCodeNode = itemsNode->first_node("ErrorCode");
+            if (errorCodeNode) errorCode = static_cast<ErrorCode>(std::stoi(errorCodeNode->value()));
+        }
+
+        return true;
+    } catch (const rapidxml::parse_error& e) {
+        return false;
+    }
+}
+
+// QueryStatusResponse实现
+std::string QueryStatusResponse::serializeToXml() const {
+    std::stringstream xml;
+    xml << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+    xml << "<PatrolDevice>\n";
+    xml << "<Type>" << static_cast<int>(MessageType::QUERY_STATUS_RESP) << "</Type>\n";
+    xml << "<Command>1</Command>\n";
+    xml << "<Time>" << timestamp << "</Time>\n";
+    xml << "<Items>\n";
+    xml << "  <Value>" << value << "</Value>\n";
+    xml << "  <Status>" << static_cast<int>(status) << "</Status>\n";
+    xml << "  <ErrorCode>" << static_cast<int>(errorCode) << "</ErrorCode>\n";
+    xml << "</Items>\n";
+    xml << "</PatrolDevice>";
+    return xml.str();
+}
+
+bool QueryStatusResponse::deserialize(const std::string& xml) {
+    rapidxml::xml_document<> doc;
+    try {
+        doc.parse<0>(const_cast<char*>(xml.c_str()));
+        auto root = doc.first_node("PatrolDevice");
+        if (!root) return false;
+
+        auto timeNode = root->first_node("Time");
+        if (timeNode) timestamp = timeNode->value();
+
+        auto itemsNode = root->first_node("Items");
+        if (itemsNode) {
+            auto valueNode = itemsNode->first_node("Value");
+            if (valueNode) value = std::stoi(valueNode->value());
+
+            auto statusNode = itemsNode->first_node("Status");
+            if (statusNode) status = static_cast<NavigationStatus>(std::stoi(statusNode->value()));
+
+            auto errorCodeNode = itemsNode->first_node("ErrorCode");
+            if (errorCodeNode) errorCode = static_cast<ErrorCode>(std::stoi(errorCodeNode->value()));
+        }
 
         return true;
     } catch (const rapidxml::parse_error& e) {
@@ -162,13 +293,34 @@ bool QueryStatusMessage::deserialize(const std::string& xml) {
 
 // MessageFactory实现
 std::unique_ptr<IMessage> MessageFactory::createMessage(MessageType type) {
+    if (static_cast<int>(type) >= 2000) {
+        return createResponseMessage(type);
+    } else {
+        return createRequestMessage(type);
+    }
+}
+
+std::unique_ptr<IMessage> MessageFactory::createRequestMessage(MessageType type) {
     switch (type) {
-        case MessageType::NAVIGATION_TASK:
-            return std::make_unique<NavigationTaskMessage>();
-        case MessageType::CANCEL_TASK:
-            return std::make_unique<CancelTaskMessage>();
-        case MessageType::QUERY_STATUS:
-            return std::make_unique<QueryStatusMessage>();
+        case MessageType::NAVIGATION_TASK_REQ:
+            return std::make_unique<NavigationTaskRequest>();
+        case MessageType::CANCEL_TASK_REQ:
+            return std::make_unique<CancelTaskRequest>();
+        case MessageType::QUERY_STATUS_REQ:
+            return std::make_unique<QueryStatusRequest>();
+        default:
+            return nullptr;
+    }
+}
+
+std::unique_ptr<IMessage> MessageFactory::createResponseMessage(MessageType type) {
+    switch (type) {
+        case MessageType::NAVIGATION_TASK_RESP:
+            return std::make_unique<NavigationTaskResponse>();
+        case MessageType::CANCEL_TASK_RESP:
+            return std::make_unique<CancelTaskResponse>();
+        case MessageType::QUERY_STATUS_RESP:
+            return std::make_unique<QueryStatusResponse>();
         default:
             return nullptr;
     }
@@ -194,4 +346,5 @@ std::unique_ptr<IMessage> MessageFactory::parseMessage(const std::string& xml) {
     }
     return nullptr;
 }
-} // namespace protocol
+
+} // namespace x30::protocol

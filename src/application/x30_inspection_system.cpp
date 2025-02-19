@@ -139,7 +139,7 @@ bool X30InspectionSystem::startInspection() {
         }
 
         // 创建并发送导航任务消息
-        protocol::NavigationTaskMessage msg;
+        protocol::NavigationTaskRequest msg;
         msg.points = points_;
         msg.timestamp = getCurrentTimestamp();
         auto comm = comm_manager_->getCommunication();
@@ -176,7 +176,7 @@ bool X30InspectionSystem::cancelInspection() {
         }
 
         // 创建并发送取消任务消息
-        protocol::CancelTaskMessage msg;
+        protocol::CancelTaskRequest msg;
         msg.timestamp = getCurrentTimestamp();
         auto comm = comm_manager_->getCommunication();
         comm->sendMessage(msg);
@@ -203,7 +203,7 @@ bool X30InspectionSystem::queryStatus() {
         }
 
         // 创建并发送状态查询消息
-        protocol::QueryStatusMessage msg;
+        protocol::QueryStatusRequest msg;
         msg.timestamp = getCurrentTimestamp();
         auto comm = comm_manager_->getCommunication();
         comm->sendMessage(msg);
@@ -232,54 +232,125 @@ bool X30InspectionSystem::isInspecting() const {
 
 void X30InspectionSystem::handleMessage(std::unique_ptr<protocol::IMessage> message) {
     switch (message->getType()) {
-        case protocol::MessageType::NAVIGATION_TASK: {
-            // 处理导航任务响应
+        case protocol::MessageType::NAVIGATION_TASK_RESP: {
+            auto resp = static_cast<protocol::NavigationTaskResponse*>(message.get());
+            auto responseEvent = std::make_shared<MessageResponseEvent>();
+            responseEvent->messageId = static_cast<uint32_t>(message->getType());
+            responseEvent->success = (resp->errorCode == protocol::ErrorCode::SUCCESS);
+
+            if (resp->errorCode == protocol::ErrorCode::SUCCESS) {
+                responseEvent->data = "导航任务已接受: " + std::to_string(resp->value);
+            } else {
+                responseEvent->data = "导航任务失败，错误状态: " + std::to_string(resp->errorStatus);
+            }
+
+            publishEvent(responseEvent);
+
             if (callback_.onStatusUpdate) {
-                callback_.onStatusUpdate("导航任务已接收");
+                callback_.onStatusUpdate(responseEvent->data);
             }
             break;
         }
-        case protocol::MessageType::CANCEL_TASK: {
-            // 处理取消任务响应
+        case protocol::MessageType::CANCEL_TASK_RESP: {
+            auto resp = static_cast<protocol::CancelTaskResponse*>(message.get());
+            auto responseEvent = std::make_shared<MessageResponseEvent>();
+            responseEvent->messageId = static_cast<uint32_t>(message->getType());
+            responseEvent->success = (resp->errorCode == protocol::ErrorCode::SUCCESS);
+            responseEvent->data = resp->errorCode == protocol::ErrorCode::SUCCESS ?
+                "取消任务成功" : "取消任务失败";
+
+            publishEvent(responseEvent);
+
             if (callback_.onStatusUpdate) {
-                callback_.onStatusUpdate("取消任务已接收");
+                callback_.onStatusUpdate(responseEvent->data);
             }
             break;
         }
-        case protocol::MessageType::QUERY_STATUS: {
-            // 处理状态查询响应
+        case protocol::MessageType::QUERY_STATUS_RESP: {
+            auto resp = static_cast<protocol::QueryStatusResponse*>(message.get());
+            auto responseEvent = std::make_shared<MessageResponseEvent>();
+            responseEvent->messageId = static_cast<uint32_t>(message->getType());
+            responseEvent->success = (resp->errorCode == protocol::ErrorCode::SUCCESS);
+
+            std::string statusStr;
+            switch (resp->status) {
+                case protocol::NavigationStatus::COMPLETED:
+                    statusStr = "已完成";
+                    break;
+                case protocol::NavigationStatus::EXECUTING:
+                    statusStr = "执行中";
+                    break;
+                case protocol::NavigationStatus::FAILED:
+                    statusStr = "执行失败";
+                    break;
+            }
+
+            responseEvent->data = "导航状态: " + statusStr + ", 值: " + std::to_string(resp->value);
+            publishEvent(responseEvent);
+
             if (callback_.onStatusUpdate) {
-                callback_.onStatusUpdate("状态查询已完成");
+                callback_.onStatusUpdate(responseEvent->data);
             }
             break;
         }
+        default:
+            if (callback_.onError) {
+                callback_.onError(-1, "未知消息类型");
+            }
+            break;
     }
 }
 
 void X30InspectionSystem::handleError(const std::string& error) {
+    auto errorEvent = std::make_shared<ErrorEvent>();
+    errorEvent->code = -1;
+    errorEvent->message = error;
+    publishEvent(errorEvent);
+
     if (callback_.onError) {
         callback_.onError(-1, error);
     }
 }
 
 void X30InspectionSystem::handleStateChange(const state::X30StateMachine& machine) {
-    // 根据状态机状态更新系统状态
+    auto statusEvent = std::make_shared<NavigationStatusEvent>();
+
     if (state::isNavigating(machine)) {
-        is_inspecting_ = true;
-        if (callback_.onStatusUpdate) {
-            callback_.onStatusUpdate("正在执行巡检任务");
-        }
+        statusEvent->completed = false;
+        statusEvent->status = "导航中";
+        statusEvent->currentPoint = "当前导航点信息"; // 这里可以添加具体的导航点信息
+    } else if (state::isIdle(machine)) {
+        statusEvent->completed = true;
+        statusEvent->status = "空闲";
     } else if (state::isError(machine)) {
-        is_inspecting_ = false;
-        if (callback_.onError) {
-            callback_.onError(-1, "巡检任务出错");
-        }
-    } else {
-        is_inspecting_ = false;
-        if (callback_.onCompleted) {
-            callback_.onCompleted();
-        }
+        statusEvent->completed = false;
+        statusEvent->status = "错误";
     }
+
+    publishEvent(statusEvent);
+}
+
+void X30InspectionSystem::handleMessageResponse(const protocol::IMessage& message) {
+    auto responseEvent = std::make_shared<MessageResponseEvent>();
+    responseEvent->messageId = static_cast<uint32_t>(message.getType());
+    responseEvent->success = true;
+    responseEvent->data = "消息处理成功";
+    publishEvent(responseEvent);
+}
+
+void X30InspectionSystem::handleConnectionStatus(bool connected, const std::string& message) {
+    auto statusEvent = std::make_shared<ConnectionStatusEvent>();
+    statusEvent->connected = connected;
+    statusEvent->message = message;
+    publishEvent(statusEvent);
+}
+
+void X30InspectionSystem::handleNavigationStatus(bool completed, const std::string& point, const std::string& status) {
+    auto statusEvent = std::make_shared<NavigationStatusEvent>();
+    statusEvent->completed = completed;
+    statusEvent->currentPoint = point;
+    statusEvent->status = status;
+    publishEvent(statusEvent);
 }
 
 void X30InspectionSystem::messageProcessingLoop() {
@@ -287,22 +358,22 @@ void X30InspectionSystem::messageProcessingLoop() {
         auto msg = message_queue_.pop();
         if (msg) {
             switch (msg->getType()) {
-                case x30::protocol::MessageType::NAVIGATION_TASK: {
-                    startInspection();
-                    break;
-                }
-                case x30::protocol::MessageType::CANCEL_TASK: {
-                    cancelInspection();
-                    break;
-                }
-                case x30::protocol::MessageType::QUERY_STATUS: {
-                    queryStatus();
-                    break;
-                }
-                default: {
-                    handleMessage(std::move(msg));
-                    break;
-                }
+            case x30::protocol::MessageType::NAVIGATION_TASK_REQ: {
+                startInspection();
+                break;
+            }
+            case x30::protocol::MessageType::CANCEL_TASK_REQ: {
+                cancelInspection();
+                break;
+            }
+            case x30::protocol::MessageType::QUERY_STATUS_REQ: {
+                queryStatus();
+                break;
+            }
+            default: {
+                handleMessage(std::move(msg));
+                break;
+            }
             }
         }
     }
