@@ -6,7 +6,6 @@
 #include <vector>
 #include <functional>
 #include "protocol/x30_protocol.hpp"
-#include "state/x30_state_machine.hpp"
 #include "communication/x30_communication.hpp"
 #include "application/MessageQueue.hpp"
 #include "application/event_bus.hpp"
@@ -14,6 +13,7 @@
 namespace x30 {
 namespace application {
 
+class NavStateProcedure;
 // 巡检任务状态回调
 struct InspectionCallback {
     std::function<void()> onStarted;
@@ -53,6 +53,11 @@ public:
         EventBus::getInstance().unsubscribe(eventType, handlerId);
     }
 
+    // 导航状态更新
+    void updateNavigationStatus(bool completed, const std::string& point = "", const std::string& status = "") {
+        handleNavigationStatus(completed, point, status);
+    }
+
 protected:
     // 事件发布方法
     void publishEvent(const std::shared_ptr<Event>& event) {
@@ -68,7 +73,7 @@ private:
     // 内部处理函数
     void handleMessage(std::unique_ptr<protocol::IMessage> message);
     void handleError(const std::string& error);
-    void handleStateChange(const state::X30StateMachine& machine);
+    // void handleStateChange(const state::X30StateMachine& machine);
 
     // 消息处理循环
     void messageProcessingLoop();
@@ -80,7 +85,7 @@ private:
 
     // 成员变量
     std::unique_ptr<communication::AsyncCommunicationManager> comm_manager_;
-    std::unique_ptr<state::X30StateMachine> state_machine_;
+    // std::unique_ptr<state::X30StateMachine> state_machine_;
     InspectionCallback callback_;
     std::atomic<bool> is_inspecting_;
 
@@ -89,6 +94,8 @@ private:
     std::thread message_thread_;
     std::atomic<bool> running_{false};
     std::vector<protocol::NavigationPoint> points_;
+
+    std::unique_ptr<NavStateProcedure> nav_state_procedure_;
 };
 
 } // namespace application

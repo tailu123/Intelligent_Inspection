@@ -1,24 +1,22 @@
 #pragma once
 
+#include <boost/mpl/aux_/fold_impl.hpp>
 #include <boost/msm/front/state_machine_def.hpp>
 #include <boost/msm/back/state_machine.hpp>
 #include <boost/mpl/vector.hpp>
 #include <boost/msm/front/functor_row.hpp>
 #include <boost/msm/front/euml/common.hpp>
 #include <boost/function.hpp>
+#include <boost/proto/matches.hpp>
 #include <iostream>
 #include "../protocol/x30_protocol.hpp"
 #include <functional>
-
-namespace x30::application {
-class NavigationContext;
-} // namespace x30::application
 
 namespace x30::state {
 
 // 前向声明
 struct NavStateMachine_;
-using NavStateMachine = boost::msm::back::state_machine<NavStateMachine_>;
+typedef boost::msm::back::state_machine<NavStateMachine_> NavStateMachine;
 
 // 状态定义
 struct Init : public boost::msm::front::state<> {
@@ -59,12 +57,6 @@ using protocol::QueryStatusResponse;
 
 // 状态机定义
 struct NavStateMachine_ : public boost::msm::front::state_machine_def<NavStateMachine_> {
-public:
-    NavStateMachine_() = default;
-
-    explicit NavStateMachine_(application::NavigationContext& context)
-        : context_(context) {}
-
     // 初始状态
     typedef Init initial_state;
 
@@ -86,17 +78,17 @@ public:
     // 状态机行为定义
     struct transition_actions {
         template <class EVT, class FSM, class SourceState, class TargetState>
-        void operator()(EVT const& evt, FSM& fsm, SourceState&, TargetState&) const {
+        void operator()(EVT const&, FSM&, SourceState&, TargetState&) const {
             std::cout << "执行状态转换动作" << std::endl;
         }
     };
 
     // 动作函数
-    void sendNavRequest(const NavigationTaskRequest& evt) {
+    void sendNavRequest(const NavigationTaskRequest& evt) const {
         std::cout << "发送导航任务请求，导航点数量: " << evt.points.size() << std::endl;
     }
 
-    void sendCancelRequest(const CancelTaskRequest& evt) {
+    void sendCancelRequest(const CancelTaskRequest&) const {
         std::cout << "发送取消请求" << std::endl;
     }
 
@@ -112,10 +104,6 @@ public:
     bool checkRespStatusExecuting(const QueryStatusResponse& evt) const {
         return evt.status == protocol::NavigationStatus::EXECUTING;
     }
-
-    // 获取context引用
-    application::NavigationContext& get_context() { return context_; }
-    const application::NavigationContext& get_context() const { return context_; }
 
     // 动作和守卫的包装器
     struct send_nav_request {
@@ -183,9 +171,23 @@ public:
     void no_transition(Event const&, FSM&, int state) {
         std::cout << "无法处理当前状态(" << state << ")下的事件" << std::endl;
     }
-
-private:
-    application::NavigationContext& context_;
 };
+
+// 状态查询函数
+inline bool isInInit(const NavStateMachine& machine) {
+    return machine.is_flag_active<Init>();
+}
+
+inline bool isInPrepareEnterNav(const NavStateMachine& machine) {
+    return machine.is_flag_active<PrepareEnterNav>();
+}
+
+inline bool isInNav(const NavStateMachine& machine) {
+    return machine.is_flag_active<Nav>();
+}
+
+inline bool isInDone(const NavStateMachine& machine) {
+    return machine.is_flag_active<Done>();
+}
 
 } // namespace x30::state
