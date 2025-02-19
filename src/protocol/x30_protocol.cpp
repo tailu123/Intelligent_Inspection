@@ -6,20 +6,24 @@
 #include <fstream>
 #include <iostream>
 #include <filesystem>
+#include "protocol/protocol_header.hpp"
 
 namespace x30::protocol {
 
-// 辅助函数：获取当前时间戳
-// static std::string getCurrentTimestamp() {
-//     auto now = std::chrono::system_clock::now();
-//     auto time = std::chrono::system_clock::to_time_t(now);
-//     std::stringstream ss;
-//     ss << std::put_time(std::localtime(&time), "%Y-%m-%d %H:%M:%S");
-//     return ss.str();
-// }
+// IMessage实现
+std::string IMessage::serialize() const {
+    std::string xml_data = serializeToXml();
+    ProtocolHeader header(xml_data.size());
+
+    std::string result;
+    result.reserve(ProtocolHeader::SIZE + xml_data.size());
+    result.append(reinterpret_cast<const char*>(&header), ProtocolHeader::SIZE);
+    result.append(xml_data);
+    return result;
+}
 
 // NavigationTaskMessage实现
-std::string NavigationTaskMessage::serialize() const {
+std::string NavigationTaskMessage::serializeToXml() const {
     std::stringstream xml;
     xml << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
     xml << "<PatrolDevice>\n";
@@ -99,7 +103,7 @@ bool NavigationTaskMessage::deserialize(const std::string& xml) {
 }
 
 // CancelTaskMessage实现
-std::string CancelTaskMessage::serialize() const {
+std::string CancelTaskMessage::serializeToXml() const {
     std::stringstream xml;
     xml << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
     xml << "<PatrolDevice>\n";
@@ -128,7 +132,7 @@ bool CancelTaskMessage::deserialize(const std::string& xml) {
 }
 
 // QueryStatusMessage实现
-std::string QueryStatusMessage::serialize() const {
+std::string QueryStatusMessage::serializeToXml() const {
     std::stringstream xml;
     xml << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
     xml << "<PatrolDevice>\n";
@@ -190,31 +194,4 @@ std::unique_ptr<IMessage> MessageFactory::parseMessage(const std::string& xml) {
     }
     return nullptr;
 }
-
-// std::vector<NavigationPoint> loadDefaultNavigationPoints(const std::string& configPath) {
-//     std::vector<NavigationPoint> points;
-//     try {
-//         // 检查文件是否存在
-//         if (!std::filesystem::exists(configPath)) {
-//             std::cerr << "配置文件不存在: " << configPath << std::endl;
-//             return points;
-//         }
-
-//         // 读取JSON文件
-//         std::ifstream file(configPath);
-//         nlohmann::json jsonArray;
-//         file >> jsonArray;
-
-//         // 解析每个导航点
-//         for (const auto& jsonPoint : jsonArray) {
-//             points.push_back(NavigationPoint::fromJson(jsonPoint));
-//         }
-
-//         std::cout << "成功从配置文件加载了 " << points.size() << " 个导航点" << std::endl;
-//     } catch (const std::exception& e) {
-//         std::cerr << "加载配置文件失败: " << e.what() << std::endl;
-//     }
-//     return points;
-// }
-
 } // namespace protocol

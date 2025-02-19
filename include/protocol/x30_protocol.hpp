@@ -65,16 +65,20 @@ struct NavigationPoint {
 class IMessage {
 public:
     virtual ~IMessage() = default;
-    virtual std::string serialize() const = 0;
+    std::string serialize() const;
+
     virtual bool deserialize(const std::string& xml) = 0;
     virtual MessageType getType() const = 0;
+
+protected:
+    virtual std::string serializeToXml() const = 0;
 };
 
 // 导航任务消息
 class NavigationTaskMessage : public IMessage {
 public:
     MessageType getType() const override { return MessageType::NAVIGATION_TASK; }
-    std::string serialize() const override;
+    std::string serializeToXml() const override;
     bool deserialize(const std::string& xml) override;
 
     std::vector<NavigationPoint> points;
@@ -85,7 +89,7 @@ public:
 class CancelTaskMessage : public IMessage {
 public:
     MessageType getType() const override { return MessageType::CANCEL_TASK; }
-    std::string serialize() const override;
+    std::string serializeToXml() const override;
     bool deserialize(const std::string& xml) override;
 
     std::string timestamp;
@@ -95,7 +99,7 @@ public:
 class QueryStatusMessage : public IMessage {
 public:
     MessageType getType() const override { return MessageType::QUERY_STATUS; }
-    std::string serialize() const override;
+    std::string serializeToXml() const override;
     bool deserialize(const std::string& xml) override;
 
     std::string timestamp;
@@ -107,9 +111,6 @@ public:
     static std::unique_ptr<IMessage> createMessage(MessageType type);
     static std::unique_ptr<IMessage> parseMessage(const std::string& xml);
 };
-
-// // 添加配置加载函数
-// std::vector<NavigationPoint> loadDefaultNavigationPoints(const std::string& configPath);
 
 } // namespace protocol
 } // namespace x30

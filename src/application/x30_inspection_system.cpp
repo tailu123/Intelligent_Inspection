@@ -291,18 +291,19 @@ void X30InspectionSystem::messageProcessingLoop() {
                     startInspection();
                     break;
                 }
-                case x30::protocol::MessageType::CANCEL_TASK:
+                case x30::protocol::MessageType::CANCEL_TASK: {
                     cancelInspection();
                     break;
-                case x30::protocol::MessageType::QUERY_STATUS:
+                }
+                case x30::protocol::MessageType::QUERY_STATUS: {
                     queryStatus();
                     break;
-                default:
+                }
+                default: {
                     handleMessage(std::move(msg));
                     break;
-
+                }
             }
-            handleMessage(std::move(msg));
         }
     }
 }
