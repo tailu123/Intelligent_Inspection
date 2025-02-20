@@ -15,5 +15,14 @@ std::unique_ptr<protocol::IMessage> MessageQueue::pop() {
     queue_.pop();
     return msg;
 }
+
+void MessageQueue::clear() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    while (!queue_.empty()) {
+        queue_.pop();
+    }
+}
+
+
 }   // namespace application
 }   // namespace x30

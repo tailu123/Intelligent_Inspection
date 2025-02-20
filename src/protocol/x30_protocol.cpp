@@ -343,6 +343,7 @@ std::unique_ptr<IMessage> MessageFactory::parseMessage(const std::string& xml) {
         }
     } catch (const std::exception& e) {
         // 解析失败
+        std::cerr << "Failed to parse message: " << e.what() << std::endl;
     }
     return nullptr;
 }

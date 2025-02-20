@@ -1,4 +1,5 @@
 #include "application/NavStateProcedure.hpp"
+#include "application/MessageQueue.hpp"
 #include "application/x30_inspection_system.hpp"
 #include "application/event_bus.hpp"
 #include "state/NavStateMachine.hpp"
@@ -65,8 +66,9 @@ NavStateProcedure::NavStateProcedure(
     std::vector<protocol::NavigationPoint>& points,
     communication::AsyncCommunicationManager& comm_manager,
     EventBus& event_bus,
-    X30InspectionSystem& inspection_system
-) : context_(points, event_bus, inspection_system, *comm_manager.getCommunication()) {
+    X30InspectionSystem& inspection_system,
+    MessageQueue& message_queue
+) : context_(points, event_bus, inspection_system, message_queue, *comm_manager.getCommunication()) {
 
     // 创建状态机并传入context
     state_machine_ = std::make_unique<state::NavStateMachine>(context_);
@@ -93,16 +95,47 @@ void NavStateProcedure::start() {
     // 启动状态机
     std::cout << "启动状态机" << std::endl;
     state_machine_->start();
+    state_machine_->process_event(protocol::NavigationTaskRequest{});
 
     // 发送初始导航请求
-    action_send_nav_->execute(context_.points);
+    // action_send_nav_->execute(context_.points);
 }
 
-void NavStateProcedure::process_message(const std::shared_ptr<Event>& event) {
-    if (auto msg_event = std::dynamic_pointer_cast<MessageResponseEvent>(event)) {
-        handleMessageResponse(msg_event);
+void NavStateProcedure::cancelInspection() {
+    // 发送取消请求
+    // action_send_cancel_->execute();
+    state_machine_->process_event(protocol::CancelTaskRequest{});
+}
+
+void NavStateProcedure::queryStatus() {
+    // 实现状态查询逻辑
+    state_machine_->process_event(protocol::QueryStatusRequest{});
+}
+
+void NavStateProcedure::process_message(const protocol::IMessage& message) {
+    // 根据消息类型处理
+    switch (message.getType()) {
+        case protocol::MessageType::NAVIGATION_TASK_RESP: {
+            auto& resp = dynamic_cast<const protocol::NavigationTaskResponse&>(message);
+            state_machine_->process_event(resp);
+            break;
+        }
+        case protocol::MessageType::CANCEL_TASK_RESP: {
+            auto& resp = dynamic_cast<const protocol::CancelTaskResponse&>(message);
+            state_machine_->process_event(resp);
+            break;
+        }
+        case protocol::MessageType::QUERY_STATUS_RESP: {
+            auto& resp = dynamic_cast<const protocol::QueryStatusResponse&>(message);
+            state_machine_->process_event(resp);
+            break;
+        }
     }
 }
+
+// void NavStateProcedure::process_event(const std::shared_ptr<Event>& event) {
+//     state_machine_->process_event(*event);
+// }
 
 void NavStateProcedure::handleMessageResponse(const std::shared_ptr<MessageResponseEvent>& event) {
     // 根据消息类型处理响应

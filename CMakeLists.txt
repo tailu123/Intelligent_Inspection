@@ -38,7 +38,16 @@ file(GLOB_RECURSE SOURCES
 list(FILTER SOURCES EXCLUDE REGEX ".*test/.*\\.cpp$")
 
 # 创建主可执行文件
-add_executable(${PROJECT_NAME} ${SOURCES})
+# add_executable(${PROJECT_NAME} ${SOURCES})
+add_executable(${PROJECT_NAME}
+    src/main.cpp
+    src/application/x30_inspection_system.cpp
+    src/application/MessageQueue.cpp
+    src/application/NavStateProcedure.cpp
+    src/communication/x30_communication.cpp
+    src/protocol/x30_protocol.cpp
+    src/protocol/protocol_header.cpp
+)
 
 # 创建TCP服务器测试程序
 add_executable(tcp_server src/test/tcp_server.cpp)

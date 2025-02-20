@@ -169,7 +169,8 @@ bool X30InspectionSystem::startInspection() {
             points_,
             *comm_manager_,
             EventBus::getInstance(),
-            *this);
+            *this,
+            message_queue_);
         // nav_state_procedure_ = std::make_unique<NavStateProcedure>(std::move(nav_context));
         nav_state_procedure_->start();
 
@@ -196,10 +197,19 @@ bool X30InspectionSystem::cancelInspection() {
     if (!is_inspecting_) {
         return false;
     }
-
+    // nav_state_procedure_->process_message(const std::shared_ptr<Event> &event);
     // 发布取消请求事件
-    auto event = std::make_shared<CancelRequestEvent>();
-    EventBus::getInstance().publish(event);
+    // auto event = std::make_shared<CancelRequestEvent>();
+    // EventBus::getInstance().publish(event);
+    if (nav_state_procedure_) {
+        nav_state_procedure_->cancelInspection();
+    }
+    else {
+        if (callback_.onError) {
+            callback_.onError(-1, "导航过程管理器不存在");
+        }
+    }
+
 
     return true;
 }
@@ -207,6 +217,15 @@ bool X30InspectionSystem::cancelInspection() {
 bool X30InspectionSystem::queryStatus() {
     if (!is_inspecting_) {
         return false;
+    }
+
+    if (nav_state_procedure_) {
+        nav_state_procedure_->queryStatus();
+    }
+    else {
+        if (callback_.onError) {
+            callback_.onError(-1, "导航过程管理器不存在");
+        }
     }
 
     // TODO: 实现状态查询逻辑
@@ -228,6 +247,13 @@ void X30InspectionSystem::messageProcessingLoop() {
                 }
                 case protocol::MessageType::QUERY_STATUS_REQ: {
                     queryStatus();
+                    break;
+                }
+                case protocol::MessageType::PROCEDURE_RESET: {
+                    // 重置巡检任务
+                    if (nav_state_procedure_) {
+                        nav_state_procedure_.reset();
+                    }
                     break;
                 }
                 default: {
@@ -265,16 +291,25 @@ void X30InspectionSystem::handleMessageResponse(const protocol::IMessage& messag
         case protocol::MessageType::NAVIGATION_TASK_RESP: // 导航任务响应
             if (callback_.onStatusUpdate) {
                 callback_.onStatusUpdate("导航任务响应已收到");
+                if (nav_state_procedure_) {
+                    nav_state_procedure_->process_message(message);
+                }
             }
             break;
         case protocol::MessageType::CANCEL_TASK_RESP: // 取消任务响应
             if (callback_.onStatusUpdate) {
                 callback_.onStatusUpdate("取消任务响应已收到");
+                if (nav_state_procedure_) {
+                    nav_state_procedure_->process_message(message);
+                }
             }
             break;
         case protocol::MessageType::QUERY_STATUS_RESP: // 状态查询响应
             if (callback_.onStatusUpdate) {
                 callback_.onStatusUpdate("状态查询响应已收到");
+                if (nav_state_procedure_) {
+                    nav_state_procedure_->process_message(message);
+                }
             }
             break;
         default:

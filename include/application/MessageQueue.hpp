@@ -11,6 +11,7 @@ class MessageQueue {
 public:
     void push(std::unique_ptr<protocol::IMessage> msg);
     std::unique_ptr<protocol::IMessage> pop();
+    void clear();
 
 
 private:

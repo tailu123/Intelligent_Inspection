@@ -9,6 +9,7 @@
 #include "communication/x30_communication.hpp"
 #include "protocol/x30_protocol.hpp"
 #include "state/NavStateMachine.hpp"
+#include "state/NavigationContext.hpp"
 namespace x30 {
 
 namespace protocol {
@@ -46,22 +47,22 @@ class ActionSendNavRequest;
 class ActionSendCancelRequest;
 
 // 导航上下文
-struct NavigationContext {
-    std::vector<protocol::NavigationPoint>& points;
-    EventBus& event_bus;
-    X30InspectionSystem& inspection_system;
-    communication::X30Communication& communication;
+// struct NavigationContext {
+//     std::vector<protocol::NavigationPoint>& points;
+//     EventBus& event_bus;
+//     X30InspectionSystem& inspection_system;
+//     communication::X30Communication& communication;
 
-    NavigationContext(
-        std::vector<protocol::NavigationPoint>& p,
-        EventBus& eb,
-        X30InspectionSystem& is,
-        communication::X30Communication& comm
-    ) : points(p)
-      , event_bus(eb)
-      , inspection_system(is)
-      , communication(comm) {}
-};
+//     NavigationContext(
+//         std::vector<protocol::NavigationPoint>& p,
+//         EventBus& eb,
+//         X30InspectionSystem& is,
+//         communication::X30Communication& comm
+//     ) : points(p)
+//       , event_bus(eb)
+//       , inspection_system(is)
+//       , communication(comm) {}
+// };
 
 // RAII 事件订阅管理器
 class EventSubscriptionGuard {
@@ -92,13 +93,13 @@ private:
 // 动作基类
 class ActionBase {
 public:
-    ActionBase(NavigationContext& context, state::NavStateMachine& state_machine)
+    ActionBase(state::NavigationContext& context, state::NavStateMachine& state_machine)
         : context_(context)
         , state_machine_(state_machine) {}
     virtual ~ActionBase() = default;
 
 protected:
-    NavigationContext& context_;
+    state::NavigationContext& context_;
     state::NavStateMachine& state_machine_;
     std::vector<std::unique_ptr<EventSubscriptionGuard>> subscriptions_;
 
@@ -142,12 +143,16 @@ public:
         std::vector<protocol::NavigationPoint>& points,
         communication::AsyncCommunicationManager& comm_manager,
         EventBus& event_bus,
-        X30InspectionSystem& inspection_system
+        X30InspectionSystem& inspection_system,
+        MessageQueue& message_queue
     );
     ~NavStateProcedure();
 
     void start();
-    void process_message(const std::shared_ptr<Event>& event);
+    void cancelInspection();
+    void queryStatus();
+    void process_message(const protocol::IMessage& message);
+    // void process_event(const std::shared_ptr<Event>& event);
 
     // 获取状态机实例
     const state::NavStateMachine* getStateMachine() const { return state_machine_.get(); }
@@ -155,8 +160,8 @@ public:
 private:
     void handleMessageResponse(const std::shared_ptr<MessageResponseEvent>& event);
 
+    state::NavigationContext context_;
     std::unique_ptr<state::NavStateMachine> state_machine_;
-    NavigationContext context_;
     std::vector<std::unique_ptr<EventSubscriptionGuard>> subscriptions_;
 
     // 动作实例

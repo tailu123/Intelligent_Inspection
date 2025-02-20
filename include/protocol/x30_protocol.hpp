@@ -11,6 +11,11 @@ namespace protocol {
 
 // 消息类型枚举
 enum class MessageType {
+    // 内部消息类型
+    PROCEDURE_RESET = 0,
+
+
+
     // 请求消息类型
     NAVIGATION_TASK_REQ = 1003,
     CANCEL_TASK_REQ = 1004,
@@ -157,6 +162,15 @@ public:
     NavigationStatus status;    // 导航任务执行状态
     ErrorCode errorCode;        // 错误码
     std::string timestamp;
+};
+
+// =============== 内部消息定义 ===============
+// 导航任务重置请求消息
+class ProcedureReset : public IMessage {
+public:
+    MessageType getType() const override { return MessageType::PROCEDURE_RESET; }
+    std::string serializeToXml() const override {};
+    bool deserialize(const std::string& xml) override {};
 };
 
 // 消息工厂
