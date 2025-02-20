@@ -50,7 +50,11 @@ add_executable(${PROJECT_NAME}
 )
 
 # 创建TCP服务器测试程序
-add_executable(tcp_server src/test/tcp_server.cpp)
+add_executable(tcp_server
+    src/test/tcp_server.cpp
+    src/protocol/protocol_header.cpp
+    src/protocol/x30_protocol.cpp
+    )
 
 # 链接主程序
 target_link_libraries(${PROJECT_NAME}
@@ -65,4 +69,5 @@ target_link_libraries(tcp_server
     PRIVATE
     ${Boost_LIBRARIES}
     pthread
+    nlohmann_json::nlohmann_json
 )

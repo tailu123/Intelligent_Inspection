@@ -7,6 +7,8 @@
 #include <functional>
 #include <thread>
 #include "../protocol/x30_protocol.hpp"
+#include <string_view>
+#include "protocol/protocol_header.hpp"
 
 namespace x30 {
 namespace communication {
@@ -50,6 +52,14 @@ private:
 
     MessageCallback message_callback_;
     ErrorCallback error_callback_;
+
+    void readMessageBody();
+    void handleError(std::string_view error_msg);
+    void processMessage(const std::vector<std::uint8_t>& message_data);
+
+    protocol::ProtocolHeader current_header_;
+    std::vector<std::uint8_t> message_buffer_;
+    std::size_t received_bytes_{0};
 };
 
 // 异步通信管理器
