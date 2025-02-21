@@ -6,14 +6,16 @@
 #include <vector>
 #include <functional>
 #include "protocol/x30_protocol.hpp"
-#include "communication/x30_communication.hpp"
-#include "application/MessageQueue.hpp"
-#include "application/event_bus.hpp"
+#include "network/x30_communication.hpp"
+#include "common/message_queue.hpp"
+#include "common/event_bus.hpp"
+#include "procedure/nav_procedure/nav_procedure.hpp"
 
-namespace x30 {
+namespace procedure {
+class NavigationProcedure; // 前向声明 TODO: why need this?
+} // namespace procedure
+
 namespace application {
-
-class NavStateProcedure;
 // 巡检任务状态回调
 struct InspectionCallback {
     std::function<void()> onStarted;
@@ -45,12 +47,12 @@ public:
 
     // 事件总线相关方法
     template<typename T>
-    std::string subscribeEvent(std::function<void(const std::shared_ptr<Event>&)> handler) {
-        return EventBus::getInstance().subscribe<T>(handler);
+    std::string subscribeEvent(std::function<void(const std::shared_ptr<common::Event>&)> handler) {
+        return common::EventBus::getInstance().subscribe<T>(handler);
     }
 
     void unsubscribeEvent(const std::string& eventType, const std::string& handlerId) {
-        EventBus::getInstance().unsubscribe(eventType, handlerId);
+        common::EventBus::getInstance().unsubscribe(eventType, handlerId);
     }
 
     // 导航状态更新
@@ -60,8 +62,8 @@ public:
 
 protected:
     // 事件发布方法
-    void publishEvent(const std::shared_ptr<Event>& event) {
-        EventBus::getInstance().publish(event);
+    void publishEvent(const std::shared_ptr<common::Event>& event) {
+        common::EventBus::getInstance().publish(event);
     }
 
 private:
@@ -84,18 +86,18 @@ private:
     void handleNavigationStatus(bool completed, const std::string& point, const std::string& status);
 
     // 成员变量
-    std::unique_ptr<communication::AsyncCommunicationManager> comm_manager_;
+    std::unique_ptr<network::AsyncCommunicationManager> comm_manager_;
     // std::unique_ptr<state::X30StateMachine> state_machine_;
     InspectionCallback callback_;
     std::atomic<bool> is_inspecting_;
 
     // 消息队列
-    MessageQueue message_queue_;
+    common::MessageQueue message_queue_;
     std::thread message_thread_;
     std::atomic<bool> running_{false};
     std::vector<protocol::NavigationPoint> points_;
 
-    std::unique_ptr<NavStateProcedure> nav_state_procedure_;
+    std::unique_ptr<procedure::NavigationProcedure> nav_state_procedure_;
 
     // 状态查询相关
     std::atomic<bool> status_query_running_{false};
@@ -109,4 +111,3 @@ private:
 };
 
 } // namespace application
-} // namespace x30

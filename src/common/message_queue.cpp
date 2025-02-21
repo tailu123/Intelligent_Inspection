@@ -1,7 +1,7 @@
-#include "application/MessageQueue.hpp"
+#include "common/message_queue.hpp"
 
-namespace x30 {
-namespace application {
+namespace common {
+
 void MessageQueue::push(std::unique_ptr<protocol::IMessage> msg) {
     std::lock_guard<std::mutex> lock(mutex_);
     queue_.push(std::move(msg));
@@ -22,7 +22,4 @@ void MessageQueue::clear() {
         queue_.pop();
     }
 }
-
-
-}   // namespace application
-}   // namespace x30
+} // namespace common

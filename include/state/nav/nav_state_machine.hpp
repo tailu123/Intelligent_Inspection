@@ -9,23 +9,14 @@
 #include <boost/function.hpp>
 #include <boost/proto/matches.hpp>
 #include <iostream>
-#include "../protocol/x30_protocol.hpp"
+#include "protocol/x30_protocol.hpp"
 #include <functional>
-#include "state/NavigationContext.hpp"
-#include "state/NavigationAction.hpp"
-// #include "../application/NavStateProcedure.hpp"
+#include "state/nav/nav_context.hpp"
+#include "state/nav/nav_actions.hpp"
 
-namespace x30 {
-namespace application {
-// struct NavigationContext;
-} // namespace application
-} // namespace x30
 
-namespace x30::state {
+namespace state {
 
-// // 前向声明
-// struct NavStateMachine_;
-// typedef boost::msm::back::state_machine<NavStateMachine_> NavStateMachine;
 
 // 状态定义
 struct Init : public boost::msm::front::state<> {
@@ -68,7 +59,7 @@ using protocol::CancelTaskResponse;
 using protocol::QueryStatusResponse;
 
 // 状态机定义
-struct NavStateMachine_ : public boost::msm::front::state_machine_def<NavStateMachine_> {
+struct NavigationMachine_ : public boost::msm::front::state_machine_def<NavigationMachine_> {
 
     // 初始状态
     typedef Init initial_state;
@@ -209,29 +200,29 @@ struct NavStateMachine_ : public boost::msm::front::state_machine_def<NavStateMa
     }
 
     // context引用
-    NavStateMachine_(state::NavigationContext& context)
+    NavigationMachine_(state::NavigationContext& context)
     : context_(context) {}
     state::NavigationContext context_;
 };
 
 // 后端状态机定义
-typedef boost::msm::back::state_machine<NavStateMachine_> NavStateMachine;
+typedef boost::msm::back::state_machine<NavigationMachine_> NavigationMachine;
 
 // 状态查询函数
-inline bool isInInit(const NavStateMachine& machine) {
+inline bool isInInit(const NavigationMachine& machine) {
     return machine.is_flag_active<Init>();
 }
 
-inline bool isInPrepareEnterNav(const NavStateMachine& machine) {
+inline bool isInPrepareEnterNav(const NavigationMachine& machine) {
     return machine.is_flag_active<PrepareEnterNav>();
 }
 
-inline bool isInNav(const NavStateMachine& machine) {
+inline bool isInNav(const NavigationMachine& machine) {
     return machine.is_flag_active<Nav>();
 }
 
-inline bool isInDone(const NavStateMachine& machine) {
+inline bool isInDone(const NavigationMachine& machine) {
     return machine.is_flag_active<Done>();
 }
 
-} // namespace x30::state
+} // namespace state

@@ -8,7 +8,11 @@
 #include <filesystem>
 #include "protocol/protocol_header.hpp"
 
-namespace x30::protocol {
+namespace {
+constexpr size_t HEADER_SIZE = 16;
+}  // namespace
+
+namespace protocol {
 
 // IMessage实现
 std::string IMessage::serialize() const {
@@ -16,8 +20,8 @@ std::string IMessage::serialize() const {
     ProtocolHeader header(xml_data.size());
 
     std::string result;
-    result.reserve(ProtocolHeader::SIZE + xml_data.size());
-    result.append(reinterpret_cast<const char*>(&header), ProtocolHeader::SIZE);
+    result.reserve(HEADER_SIZE + xml_data.size());
+    result.append(reinterpret_cast<const char*>(&header), HEADER_SIZE);
     result.append(xml_data);
     return result;
 }
@@ -184,20 +188,6 @@ std::string NavigationTaskResponse::serializeToXml() const {
 bool NavigationTaskResponse::deserialize(const std::string& xml) {
     rapidxml::xml_document<> doc;
     try {
-        // 添加详细的调试信息
-        // std::cout << "XML size: " << xml.size() << std::endl;
-        // std::cout << "XML content in hex:" << std::endl;
-        // for (size_t i = 0; i < xml.size(); ++i) {
-        //     printf("%02X ", (xml[i]));
-        //     if ((i + 1) % 16 == 0) std::cout << std::endl;
-        // }
-        // std::cout << std::endl;
-
-        // 创建一个新的字符串来确保正确终止
-        // std::string cleaned_xml(xml.c_str());
-        // std::cout << "Cleaned XML size: " << cleaned_xml.size() << std::endl;
-
-        // 使用清理过的XML进行解析
         doc.parse<rapidxml::parse_non_destructive>(const_cast<char*>(xml.c_str()));
         auto root = doc.first_node("PatrolDevice");
         if (!root) return false;
@@ -343,37 +333,21 @@ std::unique_ptr<IMessage> MessageFactory::createResponseMessage(MessageType type
 std::unique_ptr<IMessage> MessageFactory::parseMessage(const std::string& xml) {
     rapidxml::xml_document<> doc;
     try {
-        // std::cout << "MessageFactory::parseMessage enter" << std::endl;
-        // for (size_t i = 0; i < xml.size(); ++i) {
-        //     printf("%02X ", xml[i]);
-        //     if ((i + 1) % 16 == 0) std::cout << std::endl;
-        // }
-        // std::cout << std::endl;
-
-        // std::cout << "MessageFactory::parseMessage doc.parse" << std::endl;
         doc.parse<rapidxml::parse_non_destructive>(const_cast<char*>(xml.c_str()));
 
-        // for (size_t i = 0; i < xml.size(); ++i) {
-        //     printf("%02X ", xml[i]);
-        //     if ((i + 1) % 16 == 0) std::cout << std::endl;
-        // }
-        // std::cout << std::endl;
         auto root = doc.first_node("PatrolDevice");
         if (!root) return nullptr;
 
         auto typeNode = root->first_node("Type");
         if (!typeNode) return nullptr;
-        auto type = static_cast<MessageType>(std::stoi(typeNode->value()) + 1000);
-        // std::cout << "MessageFactory::parseMessage:" << static_cast<int>(type) << std::endl;
-        auto message = createMessage(type);
+        auto message = createMessage(static_cast<MessageType>(std::stoi(typeNode->value()) + 1000));
         if (message && message->deserialize(xml)) {
             return message;
         }
     } catch (const std::exception& e) {
-        // 解析失败
         std::cerr << "Failed to parse message: " << e.what() << std::endl;
     }
     return nullptr;
 }
 
-} // namespace x30::protocol
+} // namespace protocol

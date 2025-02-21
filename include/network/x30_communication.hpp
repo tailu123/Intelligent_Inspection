@@ -1,25 +1,24 @@
 #pragma once
 
+#include "common/message_queue.hpp"
+#include "protocol/protocol_header.hpp"
+#include "protocol/x30_protocol.hpp"
 #include <atomic>
 #include <boost/asio.hpp>
+#include <functional>
 #include <memory>
 #include <queue>
-#include <functional>
-#include <thread>
-#include "../protocol/x30_protocol.hpp"
 #include <string_view>
-#include "protocol/protocol_header.hpp"
-#include "application/MessageQueue.hpp"
+#include <thread>
 
-namespace x30 {
-namespace communication {
+namespace network {
 
 class X30Communication : public std::enable_shared_from_this<X30Communication> {
 public:
     // using MessageCallback = std::function<void(std::unique_ptr<protocol::IMessage>)>;
     using ErrorCallback = std::function<void(const std::string&)>;
 
-    X30Communication(boost::asio::io_context& io_context, application::MessageQueue& message_queue);
+    X30Communication(boost::asio::io_context& io_context, common::MessageQueue& message_queue);
 
     ~X30Communication();
 
@@ -45,7 +44,7 @@ private:
 
     // 成员变量
     boost::asio::io_context& io_context_;
-    application::MessageQueue& message_queue_;
+    common::MessageQueue& message_queue_;
     boost::asio::ip::tcp::socket socket_;
     boost::asio::strand<boost::asio::io_context::executor_type> strand_;
     boost::asio::streambuf read_buffer_;
@@ -67,7 +66,7 @@ private:
 // 异步通信管理器
 class AsyncCommunicationManager {
 public:
-    AsyncCommunicationManager(application::MessageQueue& message_queue);
+    AsyncCommunicationManager(common::MessageQueue& message_queue);
     ~AsyncCommunicationManager();
 
     // 启动和停止
@@ -80,11 +79,10 @@ public:
 private:
     std::unique_ptr<boost::asio::io_context> io_context_;
     // boost::asio::strand<boost::asio::io_context::executor_type> strand_;
-    application::MessageQueue& message_queue_;
+    common::MessageQueue& message_queue_;
     std::thread io_thread_;
     std::unique_ptr<boost::asio::io_context::work> work_;
     std::shared_ptr<X30Communication> communication_;
 };
 
-} // namespace communication
-} // namespace x30
+} // namespace network

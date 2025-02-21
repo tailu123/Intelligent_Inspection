@@ -31,9 +31,9 @@ private:
     }
 
     void startRead(std::shared_ptr<tcp::socket> socket) {
-        auto header = std::make_shared<x30::protocol::ProtocolHeader>();
+        auto header = std::make_shared<protocol::ProtocolHeader>();
         boost::asio::async_read(*socket,
-            boost::asio::buffer(header.get(), sizeof(x30::protocol::ProtocolHeader)),
+            boost::asio::buffer(header.get(), sizeof(protocol::ProtocolHeader)),
             [this, socket, header](boost::system::error_code ec, std::size_t length) {
                 if (ec) {
                     std::cout << "读取协议头错误: " << ec.message() << std::endl;
@@ -61,19 +61,19 @@ private:
     }
 
     void sendResponse(std::shared_ptr<tcp::socket> socket, uint16_t message_id) {
-        std::unique_ptr<x30::protocol::IMessage> response;
-        auto resp = std::make_unique<x30::protocol::QueryStatusResponse>();
-        resp->errorCode = x30::protocol::ErrorCode::SUCCESS;
+        std::unique_ptr<protocol::IMessage> response;
+        auto resp = std::make_unique<protocol::QueryStatusResponse>();
+        resp->errorCode = protocol::ErrorCode::SUCCESS;
         resp->value = 1;
-        resp->status = x30::protocol::NavigationStatus::EXECUTING;
+        resp->status = protocol::NavigationStatus::EXECUTING;
         resp->timestamp = "2024-03-21 10:00:00";
         response = std::move(resp);
 
         // // 根据消息ID创建对应的响应
         // switch (message_id) {
         //     case 1003: {  // NAVIGATION_TASK_REQ
-        //         auto resp = std::make_unique<x30::protocol::NavigationTaskResponse>();
-        //         resp->errorCode = x30::protocol::ErrorCode::SUCCESS;
+        //         auto resp = std::make_unique<protocol::NavigationTaskResponse>();
+        //         resp->errorCode = protocol::ErrorCode::SUCCESS;
         //         resp->value = 1;
         //         resp->errorStatus = 0;
         //         resp->timestamp = "2024-03-21 10:00:00";
@@ -81,17 +81,17 @@ private:
         //         break;
         //     }
         //     case 1004: {  // CANCEL_TASK_REQ
-        //         auto resp = std::make_unique<x30::protocol::CancelTaskResponse>();
-        //         resp->errorCode = x30::protocol::ErrorCode::SUCCESS;
+        //         auto resp = std::make_unique<protocol::CancelTaskResponse>();
+        //         resp->errorCode = protocol::ErrorCode::SUCCESS;
         //         resp->timestamp = "2024-03-21 10:00:00";
         //         response = std::move(resp);
         //         break;
         //     }
         //     case 1007: {  // QUERY_STATUS_REQ
-        //         auto resp = std::make_unique<x30::protocol::QueryStatusResponse>();
-        //         resp->errorCode = x30::protocol::ErrorCode::SUCCESS;
+        //         auto resp = std::make_unique<protocol::QueryStatusResponse>();
+        //         resp->errorCode = protocol::ErrorCode::SUCCESS;
         //         resp->value = 1;
-        //         resp->status = x30::protocol::NavigationStatus::EXECUTING;
+        //         resp->status = protocol::NavigationStatus::EXECUTING;
         //         resp->timestamp = "2024-03-21 10:00:00";
         //         response = std::move(resp);
         //         break;

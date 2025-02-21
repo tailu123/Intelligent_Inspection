@@ -1,10 +1,8 @@
 #pragma once
 
-#include "state/NavigationContext.hpp"
-#include "state/NavStateMachine.hpp"
+#include "state/nav/nav_context.hpp"
+#include "state/nav/nav_state_machine.hpp"
 
-namespace x30
-{
 namespace state
 {
 // 发送导航请求动作
@@ -51,4 +49,3 @@ private:
 
 
 }   // namespace state
-}   // namespace x30

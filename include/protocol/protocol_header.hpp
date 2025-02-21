@@ -2,7 +2,6 @@
 #include <cstdint>
 #include <array>
 
-namespace x30 {
 namespace protocol {
 
 #pragma pack(push, 1)
@@ -19,9 +18,8 @@ struct ProtocolHeader {
     explicit ProtocolHeader(uint16_t length);
     bool validateSyncBytes() const;
 
-    static constexpr size_t SIZE = 16;  // 头部固定16字节
+    // static constexpr size_t SIZE = 16;  // 头部固定16字节
 };
 #pragma pack(pop)
 
 } // namespace protocol
-} // namespace x30

@@ -1,7 +1,7 @@
 #include "application/x30_inspection_system.hpp"
-#include "application/NavStateProcedure.hpp"
-#include "application/event_bus.hpp"
-#include "communication/x30_communication.hpp"
+#include "procedure/nav_procedure/nav_procedure.hpp"
+#include "common/event_bus.hpp"
+#include "network/x30_communication.hpp"
 #include "protocol/x30_protocol.hpp"
 #include <iostream>
 #include <chrono>
@@ -15,8 +15,8 @@
 namespace  {
 // TODO: move to suitable place
 // 辅助函数：加载默认导航点
-std::vector<x30::protocol::NavigationPoint> loadDefaultNavigationPoints(const std::string& configPath) {
-    std::vector<x30::protocol::NavigationPoint> points;
+std::vector<protocol::NavigationPoint> loadDefaultNavigationPoints(const std::string& configPath) {
+    std::vector<protocol::NavigationPoint> points;
     try {
         // 检查文件是否存在
         if (!std::filesystem::exists(configPath)) {
@@ -31,7 +31,7 @@ std::vector<x30::protocol::NavigationPoint> loadDefaultNavigationPoints(const st
 
         // 解析每个导航点
         for (const auto& jsonPoint : jsonArray) {
-            points.push_back(x30::protocol::NavigationPoint::fromJson(jsonPoint));
+            points.push_back(protocol::NavigationPoint::fromJson(jsonPoint));
         }
 
         std::cout << "成功从配置文件加载了 " << points.size() << " 个导航点" << std::endl;
@@ -42,12 +42,12 @@ std::vector<x30::protocol::NavigationPoint> loadDefaultNavigationPoints(const st
 }
 
 // 辅助函数：加载默认导航点
-std::vector<x30::protocol::NavigationPoint> loadNavigationPoints() {
+std::vector<protocol::NavigationPoint> loadNavigationPoints() {
     std::filesystem::path exePath = std::filesystem::canonical("/proc/self/exe");
     std::filesystem::path projectRoot = exePath.parent_path().parent_path();
     std::filesystem::path configPath = projectRoot / "config" / "default_params.json";
 
-    std::vector<x30::protocol::NavigationPoint> points;
+    std::vector<protocol::NavigationPoint> points;
     points = loadDefaultNavigationPoints(configPath.string());
     if (points.empty()) {
         std::cout << "警告: 未能加载默认导航点，将使用示例导航点\n";
@@ -72,7 +72,6 @@ std::vector<x30::protocol::NavigationPoint> loadNavigationPoints() {
 
 
 
-namespace x30 {
 namespace application {
 X30InspectionSystem::X30InspectionSystem()
     : is_inspecting_(false)
@@ -89,7 +88,7 @@ bool X30InspectionSystem::initialize(const std::string& host, uint16_t port) {
 
     // 初始化通信管理器
     // 启动通信管理器
-    comm_manager_ = std::make_unique<communication::AsyncCommunicationManager>(message_queue_);
+    comm_manager_ = std::make_unique<network::AsyncCommunicationManager>(message_queue_);
     comm_manager_->start();
     // 设置消息回调
     auto comm = comm_manager_->getCommunication();
@@ -167,10 +166,10 @@ bool X30InspectionSystem::startInspection() {
         // };
 
         // 创建导航过程管理器
-        nav_state_procedure_ = std::make_unique<NavStateProcedure>(
+        nav_state_procedure_ = std::make_unique<procedure::NavigationProcedure>(
             points_,
             *comm_manager_,
-            EventBus::getInstance(),
+            common::EventBus::getInstance(),
             *this,
             message_queue_);
         // nav_state_procedure_ = std::make_unique<NavStateProcedure>(std::move(nav_context));
@@ -279,7 +278,7 @@ void X30InspectionSystem::handleMessage(std::unique_ptr<protocol::IMessage> mess
 
     try {
         // 发布消息响应事件
-        auto event = std::make_shared<MessageResponseEvent>();
+        auto event = std::make_shared<common::MessageResponseEvent>();
         // event->messageId = message->getMessageId();
         event->success = true; // 根据实际情况设置
         // event->data = message->toString();
@@ -375,6 +374,4 @@ void X30InspectionSystem::statusQueryLoop() {
     }
 }
 
-
 } // namespace application
-} // namespace x30

@@ -17,7 +17,6 @@ static std::string getCurrentTimestamp() {
     return ss.str();
 }
 
-namespace x30 {
 namespace protocol {
 
 // 消息类型枚举
@@ -180,8 +179,8 @@ public:
 class ProcedureReset : public IMessage {
 public:
     MessageType getType() const override { return MessageType::PROCEDURE_RESET; }
-    std::string serializeToXml() const override {};
-    bool deserialize(const std::string&) override {};
+    std::string serializeToXml() const override { return "";};
+    bool deserialize(const std::string&) override { return true; };
 };
 
 // 消息工厂
@@ -208,4 +207,3 @@ struct ErrorStatus {
 };
 
 } // namespace protocol
-} // namespace x30

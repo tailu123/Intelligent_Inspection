@@ -8,8 +8,7 @@
 #include <vector>
 #include <any>
 
-namespace x30 {
-namespace application {
+namespace common {
 
 // 事件基类
 class Event {
@@ -42,24 +41,25 @@ public:
     }
 
     // 取消注册事件处理器
-    void unsubscribe(const std::string& eventType, const std::string& handlerId) {
-        std::lock_guard<std::mutex> lock(mutex_);
-        auto it = handlers_.find(eventType);
-        if (it != handlers_.end()) {
-            it->second.erase(handlerId);
-        }
-    }
+    void unsubscribe(const std::string& eventType, const std::string& handlerId);
+    // void unsubscribe(const std::string& eventType, const std::string& handlerId) {
+    //     std::lock_guard<std::mutex> lock(mutex_);
+    //     auto it = handlers_.find(eventType);
+    //     if (it != handlers_.end()) {
+    //         it->second.erase(handlerId);
+    //     }
+    // }
 
     // 发布事件
-    void publish(const std::shared_ptr<Event>& event) {
-        std::lock_guard<std::mutex> lock(mutex_);
-        auto it = handlers_.find(typeid(*event).name());
-        if (it != handlers_.end()) {
-            for (const auto& [_, handler] : it->second) {
-                handler(event);
-            }
-        }
-    }
+    void publish(const std::shared_ptr<Event>& event);
+    // void publish(const std::shared_ptr<Event>& event) {
+    //     std::lock_guard<std::mutex> lock(mutex_);
+    //     auto it = handlers_.find(typeid(*event).name());
+    //     if (it != handlers_.end()) {
+    //     for (const auto& [_, handler] : it->second) {
+    //         handler(event);
+    //     }
+    // }
 
 private:
     EventBus() = default;
@@ -104,5 +104,4 @@ struct ErrorEvent : public Event {
     std::string message;
 };
 
-} // namespace application
-} // namespace x30
+} // namespace common

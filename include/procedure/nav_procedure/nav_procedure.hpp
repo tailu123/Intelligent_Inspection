@@ -5,38 +5,38 @@
 #include <utility>
 #include <chrono>
 #include <string>
-#include "event_bus.hpp"
-#include "communication/x30_communication.hpp"
+#include "common/event_bus.hpp"
+#include "network/x30_communication.hpp"
 #include "protocol/x30_protocol.hpp"
-#include "state/NavStateMachine.hpp"
-#include "state/NavigationContext.hpp"
-namespace x30 {
+#include "state/nav/nav_state_machine.hpp"
+#include "state/nav/nav_context.hpp"
+
+namespace common {
+class EventBus;
+} // namespace common
 
 namespace protocol {
 class NavigationPoint;
 } // namespace protocol
 
-namespace communication {
+namespace network {
 class AsyncCommunicationManager;
 class X30Communication;
-} // namespace communication
-
-// namespace state {
-// class NavStateMachine;
-// } // namespace state
+} // namespace network
 
 namespace application {
-
 class X30InspectionSystem;
-class EventBus;
+} // namespace application
+
+namespace procedure {
 
 // 导航相关事件定义
-struct SendNavRequestEvent : public Event {
+struct SendNavRequestEvent : public common::Event {
     std::string getType() const override { return "SendNavRequest"; }
     std::vector<protocol::NavigationPoint> points;
 };
 
-struct CancelRequestEvent : public Event {
+struct CancelRequestEvent : public common::Event {
     std::string getType() const override { return "CancelRequest"; }
 };
 
@@ -67,7 +67,7 @@ class ActionSendCancelRequest;
 // RAII 事件订阅管理器
 class EventSubscriptionGuard {
 public:
-    EventSubscriptionGuard(EventBus& event_bus, const std::string& event_type, const std::string& handler_id)
+    EventSubscriptionGuard(common::EventBus& event_bus, const std::string& event_type, const std::string& handler_id)
         : event_bus_(event_bus)
         , event_type_(event_type)
         , handler_id_(handler_id) {}
@@ -85,7 +85,7 @@ public:
     EventSubscriptionGuard& operator=(EventSubscriptionGuard&&) = default;
 
 private:
-    EventBus& event_bus_;
+    common::EventBus& event_bus_;
     std::string event_type_;
     std::string handler_id_;
 };
@@ -93,19 +93,19 @@ private:
 // 动作基类
 class ActionBase {
 public:
-    ActionBase(state::NavigationContext& context, state::NavStateMachine& state_machine)
+    ActionBase(state::NavigationContext& context, state::NavigationMachine& state_machine)
         : context_(context)
         , state_machine_(state_machine) {}
     virtual ~ActionBase() = default;
 
 protected:
     state::NavigationContext& context_;
-    state::NavStateMachine& state_machine_;
+    state::NavigationMachine& state_machine_;
     std::vector<std::unique_ptr<EventSubscriptionGuard>> subscriptions_;
 
     template<typename T>
     std::unique_ptr<EventSubscriptionGuard> subscribe(
-        std::function<void(const std::shared_ptr<Event>&)> handler,
+        std::function<void(const std::shared_ptr<common::Event>&)> handler,
         std::chrono::milliseconds timeout = std::chrono::milliseconds(0)) {
 
         auto handler_id = context_.event_bus.subscribe<T>(handler);
@@ -124,7 +124,7 @@ public:
     void execute(const std::vector<protocol::NavigationPoint>& points);
 
 private:
-    void handleResp1003(const std::shared_ptr<MessageResponseEvent>& event);
+    void handleResp1003(const std::shared_ptr<common::MessageResponseEvent>& event);
 };
 
 // 发送取消请求动作
@@ -134,19 +134,19 @@ public:
     void execute();
 
 private:
-    void handleResp1004(const std::shared_ptr<MessageResponseEvent>& event);
+    void handleResp1004(const std::shared_ptr<common::MessageResponseEvent>& event);
 };
 
-class NavStateProcedure {
+class NavigationProcedure {
 public:
-    NavStateProcedure(
+    NavigationProcedure(
         std::vector<protocol::NavigationPoint>& points,
-        communication::AsyncCommunicationManager& comm_manager,
-        EventBus& event_bus,
-        X30InspectionSystem& inspection_system,
-        MessageQueue& message_queue
+        network::AsyncCommunicationManager& comm_manager,
+        common::EventBus& event_bus,
+        application::X30InspectionSystem& inspection_system,
+        common::MessageQueue& message_queue
     );
-    ~NavStateProcedure();
+    ~NavigationProcedure();
 
     void start();
     void cancelInspection();
@@ -155,13 +155,13 @@ public:
     // void process_event(const std::shared_ptr<Event>& event);
 
     // 获取状态机实例
-    const state::NavStateMachine* getStateMachine() const { return state_machine_.get(); }
+    const state::NavigationMachine* getStateMachine() const { return state_machine_.get(); }
 
 private:
-    void handleMessageResponse(const std::shared_ptr<MessageResponseEvent>& event);
+    void handleMessageResponse(const std::shared_ptr<common::MessageResponseEvent>& event);
 
     state::NavigationContext context_;
-    std::unique_ptr<state::NavStateMachine> state_machine_;
+    std::unique_ptr<state::NavigationMachine> state_machine_;
     std::vector<std::unique_ptr<EventSubscriptionGuard>> subscriptions_;
 
     // 动作实例
@@ -169,5 +169,4 @@ private:
     std::unique_ptr<ActionSendCancelRequest> action_send_cancel_;
 };
 
-} // namespace application
-} // namespace x30
+} // namespace procedure

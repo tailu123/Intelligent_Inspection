@@ -42,16 +42,17 @@ list(FILTER SOURCES EXCLUDE REGEX ".*test/.*\\.cpp$")
 add_executable(${PROJECT_NAME}
     src/main.cpp
     src/application/x30_inspection_system.cpp
-    src/application/MessageQueue.cpp
-    src/application/NavStateProcedure.cpp
-    src/communication/x30_communication.cpp
+    src/common/message_queue.cpp
+    src/procedure/nav_procedure/nav_procedure.cpp
+    src/network/x30_communication.cpp
     src/protocol/x30_protocol.cpp
     src/protocol/protocol_header.cpp
+    src/common/event_bus.cpp
 )
 
 # 创建TCP服务器测试程序
 add_executable(tcp_server
-    src/test/tcp_server.cpp
+    src/tcp_server.cpp
     src/protocol/protocol_header.cpp
     src/protocol/x30_protocol.cpp
     )

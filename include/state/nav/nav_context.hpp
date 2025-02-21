@@ -2,28 +2,30 @@
 #include <vector>
 #include <memory>
 #include "protocol/x30_protocol.hpp"
-#include "application/event_bus.hpp"
+#include "common/event_bus.hpp"
 #include "application/x30_inspection_system.hpp"
-#include "communication/x30_communication.hpp"
+#include "network/x30_communication.hpp"
 
-namespace x30
-{
+namespace application {
+class X30InspectionSystem; // 前向声明 TODO: why need this? 循环依赖
+} // namespace application
+
 namespace state
 {
 // 导航上下文
 struct NavigationContext {
     std::vector<protocol::NavigationPoint>& points;
-    application::EventBus& event_bus;
+    common::EventBus& event_bus;
     application::X30InspectionSystem& inspection_system;
-    application::MessageQueue& message_queue; // TODO: optimize namespace, add procedure, add arch
-    communication::X30Communication& communication;
+    common::MessageQueue& message_queue; // TODO: optimize namespace, add procedure, add arch
+    network::X30Communication& communication;
 
     NavigationContext(
         std::vector<protocol::NavigationPoint>& p,
-        application::EventBus& eb,
+        common::EventBus& eb,
         application::X30InspectionSystem& is,
-        application::MessageQueue& mq,
-        communication::X30Communication& comm
+        common::MessageQueue& mq,
+        network::X30Communication& comm
     ) : points(p)
         , event_bus(eb)
         , inspection_system(is)
@@ -32,4 +34,3 @@ struct NavigationContext {
 };
 
 }  // namespace state
-}  // namespace x30

@@ -33,7 +33,6 @@ uint16_t generateMessageId() {
 } // namespace
 
 
-namespace x30 {
 namespace protocol {
 
 
@@ -58,4 +57,3 @@ bool ProtocolHeader::validateSyncBytes() const {
 }
 
 } // namespace protocol
-} // namespace x30

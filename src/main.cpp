@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <optional>
 #include "protocol/x30_protocol.hpp"
+#include "common/event_bus.hpp"
 namespace x30 {
 
 // 命令处理结果
@@ -74,18 +75,18 @@ private:
     // 设置事件处理器
     void setupEventHandlers() {
         // 订阅导航任务响应事件
-        system_.subscribeEvent<application::MessageResponseEvent>(
-            [](const std::shared_ptr<application::Event>& event) {
-                auto respEvent = std::static_pointer_cast<application::MessageResponseEvent>(event);
+        system_.subscribeEvent<common::MessageResponseEvent>(
+            [](const std::shared_ptr<common::Event>& event) {
+                auto respEvent = std::static_pointer_cast<common::MessageResponseEvent>(event);
                 std::cout << "收到响应: " << respEvent->data <<
                     (respEvent->success ? " (成功)" : " (失败)") << std::endl;
             }
         );
 
         // 订阅连接状态事件
-        system_.subscribeEvent<application::ConnectionStatusEvent>(
-            [](const std::shared_ptr<application::Event>& event) {
-                auto connEvent = std::static_pointer_cast<application::ConnectionStatusEvent>(event);
+        system_.subscribeEvent<common::ConnectionStatusEvent>(
+            [](const std::shared_ptr<common::Event>& event) {
+                auto connEvent = std::static_pointer_cast<common::ConnectionStatusEvent>(event);
                 std::cout << "连接状态: " <<
                     (connEvent->connected ? "已连接" : "已断开") <<
                     " - " << connEvent->message << std::endl;
@@ -93,9 +94,9 @@ private:
         );
 
         // 订阅导航状态事件
-        system_.subscribeEvent<application::NavigationStatusEvent>(
-            [](const std::shared_ptr<application::Event>& event) {
-                auto navEvent = std::static_pointer_cast<application::NavigationStatusEvent>(event);
+        system_.subscribeEvent<common::NavigationStatusEvent>(
+            [](const std::shared_ptr<common::Event>& event) {
+                auto navEvent = std::static_pointer_cast<common::NavigationStatusEvent>(event);
                 std::cout << "导航状态: " << navEvent->status <<
                     (navEvent->completed ? " (已完成)" : "") <<
                     " - 当前点: " << navEvent->currentPoint << std::endl;
@@ -103,9 +104,9 @@ private:
         );
 
         // 订阅错误事件
-        system_.subscribeEvent<application::ErrorEvent>(
-            [](const std::shared_ptr<application::Event>& event) {
-                auto errorEvent = std::static_pointer_cast<application::ErrorEvent>(event);
+        system_.subscribeEvent<common::ErrorEvent>(
+            [](const std::shared_ptr<common::Event>& event) {
+                auto errorEvent = std::static_pointer_cast<common::ErrorEvent>(event);
                 std::cout << "错误事件: [" << errorEvent->code << "] " <<
                     errorEvent->message << std::endl;
             }

@@ -4,8 +4,7 @@
 #include <condition_variable>
 #include "protocol/x30_protocol.hpp"
 
-namespace x30 {
-namespace application {
+namespace common {
 
 class MessageQueue {
 public:
@@ -20,5 +19,4 @@ private:
     std::condition_variable cv_;
 };
 
-} // namespace application
-} // namespace x30
+} // namespace common

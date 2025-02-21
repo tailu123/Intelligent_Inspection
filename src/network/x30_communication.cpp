@@ -1,14 +1,13 @@
-#include "communication/x30_communication.hpp"
+#include "network/x30_communication.hpp"
 #include <iostream>
 #include <memory>
 #include <string>
 // #include <span>
 // #include <fmt/format.h>
 
-namespace x30 {
-namespace communication {
+namespace network {
 
-X30Communication::X30Communication(boost::asio::io_context& io_context, application::MessageQueue& message_queue)
+X30Communication::X30Communication(boost::asio::io_context& io_context, common::MessageQueue& message_queue)
     : io_context_(io_context)
     , message_queue_(message_queue)
     , socket_(io_context)
@@ -217,7 +216,7 @@ void X30Communication::handleWrite(const boost::system::error_code& error) {
 }
 
 // AsyncCommunicationManager实现
-AsyncCommunicationManager::AsyncCommunicationManager(application::MessageQueue& message_queue)
+AsyncCommunicationManager::AsyncCommunicationManager(common::MessageQueue& message_queue)
     : io_context_(std::make_unique<boost::asio::io_context>())
     , message_queue_(message_queue)
     // , strand_(io_context_->get_executor())
@@ -252,5 +251,4 @@ std::shared_ptr<X30Communication> AsyncCommunicationManager::getCommunication() 
     return communication_;
 }
 
-} // namespace communication
-} // namespace x30
+} // namespace network
