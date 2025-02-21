@@ -1,10 +1,11 @@
 #include "application/x30_inspection_system.hpp"
 #include <iostream>
+#include <ostream>
 #include <thread>
 #include <chrono>
 #include <filesystem>
 #include <optional>
-
+#include "protocol/x30_protocol.hpp"
 namespace x30 {
 
 // 命令处理结果
@@ -39,7 +40,7 @@ public:
         std::string command;
 
         while (true) {
-            std::cout << "\n请输入命令: ";
+            std::cout << "\n请输入命令:\n";
             std::getline(std::cin, command);
 
             auto result = handleCommand(command);
@@ -173,6 +174,48 @@ int main(int argc, char* argv[]) {
             std::cout << "用法: " << argv[0] << " <host> <port>\n";
             return 1;
         }
+
+/*
+<?xml version="1.0" encoding="UTF-8"?>
+<PatrolDevice>
+    <Type>1003</Type>
+    <Command>1</Command>
+    <Time>2025-02-21 10:13:15</Time>
+    <Items>
+        <Value>2</Value>
+        <ErrorCode>0</ErrorCode>
+        <ErrorStatus>8960</ErrorStatus>
+    </Items>
+</PatrolDevice>
+*/
+        // new string according to above
+        // std::string xml =
+// R"(<?xml version="1.0" encoding="UTF-8"?>
+//         <PatrolDevice>
+//             <Type>1003</Type>
+//             <Command>1</Command>
+//             <Time>2025-02-21 10:13:15</Time>
+//             <Items>
+//                 <Value>2</Value>
+//                 <ErrorCode>0</ErrorCode>
+//                 <ErrorStatus>8960</ErrorStatus>
+//             </Items>
+//         </PatrolDevice>)";
+// R"(<?xml version="1.0" encoding="UTF-8"?>
+// <PatrolDevice>
+//     <Type>1003</Type>
+//     <Command>1</Command>
+//     <Time>2025-02-21 10:48:55</Time>
+//     <Items>
+//         <Value>1</Value>
+//         <ErrorCode>2</ErrorCode>
+//         <ErrorStatus>8962</ErrorStatus>
+//     </Items>
+// </PatrolDevice>)";
+//         x30::protocol::NavigationTaskResponse msg;
+//         msg.deserialize(xml);
+//         std::cout << msg.timestamp << msg.value << msg.errorStatus << std::endl;
+
 
         x30::InspectionApp app;
         std::string host = argv[1];

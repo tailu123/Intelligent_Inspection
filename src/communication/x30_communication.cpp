@@ -1,8 +1,9 @@
 #include "communication/x30_communication.hpp"
 #include <iostream>
 #include <memory>
+#include <string>
 // #include <span>
-#include <fmt/format.h>
+// #include <fmt/format.h>
 
 namespace x30 {
 namespace communication {
@@ -39,7 +40,7 @@ bool X30Communication::isConnected() const {
 void X30Communication::sendMessage(const protocol::IMessage& message) {
     auto self = shared_from_this();
     auto msg = message.serialize();
-    std::cout << "发送消息: " << msg << std::endl;
+    // std::cout << "发送消息: " << msg << std::endl;
 
     boost::asio::post(strand_, [this, self, msg = std::move(msg)]() {
         bool write_in_progress = !write_queue_.empty();
@@ -80,7 +81,9 @@ void X30Communication::doRead() {
         boost::asio::bind_executor(strand_,
             [this, self](const boost::system::error_code& error, std::size_t /*bytes_transferred*/) {
                 if (error) {
-                    handleError(fmt::format("读取协议头失败: {}", error.message()));
+                    // handleError(fmt::format("读取协议头失败: {}", error.message()));
+
+                    handleError({"读取协议头失败: " + error.message()});
                     return;
                 }
 
@@ -89,16 +92,39 @@ void X30Communication::doRead() {
                     return;
                 }
 
-                // 预分配消息体缓冲区
-                try {
-                    message_buffer_.resize(current_header_.length);
-                } catch (const std::exception& e) {
-                    handleError(fmt::format("分配消息缓冲区失败: {}", e.what()));
-                    return;
-                }
+                // 2. 读取消息体
+                // std::vector<std::uint8_t> message_buffer;
+                message_buffer_.resize(current_header_.length);
+                boost::asio::async_read(socket_,
+                    boost::asio::buffer(message_buffer_),
+                    boost::asio::bind_executor(strand_,
+                        [this, self](const boost::system::error_code& error, std::size_t /*bytes_transferred*/) {
+                            if (error) {
+                                handleError("读取消息体失败: " + error.message());
+                                return;
+                            }
 
-                received_bytes_ = 0;
-                readMessageBody();
+                            // 3. 处理完整消息
+                            processMessage(message_buffer_);
+
+                            // 4. 继续读取下一条消息
+                            doRead();
+                        }));
+                // // 预分配消息体缓冲区
+                // try {
+                //     message_buffer_.resize(current_header_.length);
+                // } catch (const std::exception& e) {
+                //     // handleError(fmt::format("分配消息缓冲区失败: {}", e.what()));
+                //     std::string msg = "分配消息缓冲区失败: ";
+                //     msg += e.what();
+                //     // handleError({"分配消息缓冲区失败: " + e.what()});
+                //     handleError(msg);
+                //     return;
+                // }
+                // std::cout << "X30Communication::doRead-current_header_.length:" << current_header_.length << std::endl;
+
+                // received_bytes_ = 0;
+                // readMessageBody();
             }));
 }
 
@@ -113,7 +139,8 @@ void X30Communication::readMessageBody() {
         boost::asio::bind_executor(strand_,
             [this, self](const boost::system::error_code& error, std::size_t bytes_transferred) {
                 if (error) {
-                    handleError(fmt::format("读取消息体失败: {}", error.message()));
+                    // handleError(fmt::format("读取消息体失败: {}", error.message()));
+                    handleError({"读取消息体失败: " + error.message()});
                     return;
                 }
 
@@ -144,16 +171,33 @@ void X30Communication::processMessage(const std::vector<std::uint8_t>& message_d
     }
 
     try {
+        // std::cout << "X30Communication::processMessage-message_data.size:" << message_data.size() << std::endl;
+        // for (size_t i = 0; i < message_data.size(); ++i) {
+        //     printf("%02X ", message_data[i]);
+        //     if ((i + 1) % 16 == 0) std::cout << std::endl;
+        // }
+
+        std::cout << std::endl;
+
         std::string message{reinterpret_cast<const char*>(message_data.data()),
                           message_data.size()};
-        std::cout << "收到消息: " << message << std::endl;
+        // for (size_t i = 0; i < message.size(); ++i) {
+        //     printf("%02X ", message[i]);
+        //     if ((i + 1) % 16 == 0) std::cout << std::endl;
+        // }
+        // std::cout << std::endl;
+        // std::cout << "收到消息: " << message << std::endl;
         if (auto msg = protocol::MessageFactory::parseMessage(message)) {
             message_callback_(std::move(msg));
         } else {
             handleError("消息解析失败");
         }
     } catch (const std::exception& e) {
-        handleError(fmt::format("消息处理异常: {}", e.what()));
+        // handleError(fmt::format("消息处理异常: {}", e.what()));
+        // handleError({"消息处理异常: " + e.what()});
+        std::string msg = "消息处理异常: ";
+        msg += e.what();
+        handleError(msg);
     }
 }
 

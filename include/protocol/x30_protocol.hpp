@@ -5,6 +5,17 @@
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <rapidxml/rapidxml.hpp>
+#include <chrono>
+#include <iomanip>
+
+// 辅助函数：获取当前时间戳
+static std::string getCurrentTimestamp() {
+    auto now = std::chrono::system_clock::now();
+    auto time = std::chrono::system_clock::to_time_t(now);
+    std::stringstream ss;
+    ss << std::put_time(std::localtime(&time), "%Y-%m-%d %H:%M:%S");
+    return ss.str();
+}
 
 namespace x30 {
 namespace protocol {
@@ -170,7 +181,7 @@ class ProcedureReset : public IMessage {
 public:
     MessageType getType() const override { return MessageType::PROCEDURE_RESET; }
     std::string serializeToXml() const override {};
-    bool deserialize(const std::string& xml) override {};
+    bool deserialize(const std::string&) override {};
 };
 
 // 消息工厂

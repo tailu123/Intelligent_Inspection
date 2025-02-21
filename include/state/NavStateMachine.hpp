@@ -30,29 +30,29 @@ namespace x30::state {
 // 状态定义
 struct Init : public boost::msm::front::state<> {
     template <class Event, class FSM>
-    void on_entry(Event const&, FSM&) { std::cout << "进入初始状态" << std::endl; }
+    void on_entry(Event const&, FSM&) { std::cout << "[NavFsm:State]: 进入初始状态" << std::endl; }
     template <class Event, class FSM>
-    void on_exit(Event const&, FSM&) { std::cout << "离开初始状态" << std::endl; }
+    void on_exit(Event const&, FSM&) { std::cout << "[NavFsm:State]: 离开初始状态" << std::endl; }
 };
 
 struct PrepareEnterNav : public boost::msm::front::state<> {
     template <class Event, class FSM>
-    void on_entry(Event const&, FSM&) { std::cout << "进入准备导航状态" << std::endl; }
+    void on_entry(Event const&, FSM&) { std::cout << "[NavFsm:State]: 进入准备导航状态" << std::endl; }
     template <class Event, class FSM>
-    void on_exit(Event const&, FSM&) { std::cout << "离开准备导航状态" << std::endl; }
+    void on_exit(Event const&, FSM&) { std::cout << "[NavFsm:State]: 离开准备导航状态" << std::endl; }
 };
 
 struct Nav : public boost::msm::front::state<> {
     template <class Event, class FSM>
-    void on_entry(Event const&, FSM&) { std::cout << "进入导航状态" << std::endl; }
+    void on_entry(Event const&, FSM&) { std::cout << "[NavFsm:State]: 进入导航状态" << std::endl; }
     template <class Event, class FSM>
-    void on_exit(Event const&, FSM&) { std::cout << "离开导航状态" << std::endl; }
+    void on_exit(Event const&, FSM&) { std::cout << "[NavFsm:State]: 离开导航状态" << std::endl; }
 };
 
 struct Done : public boost::msm::front::terminate_state<> {
     template <class Event, class FSM>
     void on_entry(Event const&, FSM& fsm) {
-        std::cout << "进入完成状态" << std::endl;
+        std::cout << "[NavFsm:State]: 进入完成状态" << std::endl;
         fsm.context_.message_queue.clear(); // TODO: can optimize by cleanup_pending
         fsm.context_.message_queue.push(std::make_unique<protocol::ProcedureReset>());
         fsm.on_terminate();
@@ -89,37 +89,37 @@ struct NavStateMachine_ : public boost::msm::front::state_machine_def<NavStateMa
     }
 
     // 状态机行为定义
-    struct transition_actions {
-        template <class EVT, class FSM, class SourceState, class TargetState>
-        void operator()(EVT const&, FSM&, SourceState&, TargetState&) const {
-            std::cout << "执行状态转换动作" << std::endl;
-        }
-    };
+    // struct transition_actions {
+    //     template <class EVT, class FSM, class SourceState, class TargetState>
+    //     void operator()(EVT const&, FSM&, SourceState&, TargetState&) const {
+    //         std::cout << "[NavFsm]: 执行状态转换动作" << std::endl;
+    //     }
+    // };
 
     // 动作函数
     // void sendNavRequest(const NavigationTaskRequest& evt) const {
     //     std::cout << "发送导航任务请求，导航点数量: " << evt.points.size() << std::endl;
     // }
     void sendNavRequest(state::NavigationContext& context) const {
-        std::cout << "发送导航任务请求，导航点数量: " << context.points.size() << std::endl;
+        std::cout << "[NavFsm:Action]: 发送1003请求--下发导航任务，导航点数量: " << context.points.size() << std::endl;
         auto message = NavigationTaskRequest{};
         message.points = context.points;
-        message.timestamp = "2021-08-01 12:00:00";
+        message.timestamp = getCurrentTimestamp();
         context.communication.sendMessage(message);
     }
 
     void sendCancelRequest(state::NavigationContext& context) const {
-        std::cout << "发送取消请求" << std::endl;
+        std::cout << "[NavFsm:Action]: 发送1004请求--取消导航任务" << std::endl;
         // auto message = CancelTaskRequest{};
         protocol::CancelTaskRequest req;
-        req.timestamp = "2021-08-01 12:00:00";
+        req.timestamp = getCurrentTimestamp();
         context.communication.sendMessage(req);
     }
 
     void sendQueryRequest(state::NavigationContext& context) const {
-        std::cout << "发送查询请求" << std::endl;
+        std::cout << "[NavFsm:Action]: 发送1007请求--查询设备运行状态" << std::endl;
         protocol::QueryStatusRequest req;
-        req.timestamp = "2021-08-01 12:00:00";
+        req.timestamp = getCurrentTimestamp();
         context.communication.sendMessage(req);
     }
 
@@ -187,18 +187,6 @@ struct NavStateMachine_ : public boost::msm::front::state_machine_def<NavStateMa
     };
 
     // 转换表
-    // typedef boost::msm::front::Row<Init, NavigationTaskRequest, PrepareEnterNav, send_nav_request, boost::msm::front::none> init_to_prepare;
-    // typedef boost::msm::front::Row<PrepareEnterNav, CancelTaskRequest, PrepareEnterNav, send_cancel_request, boost::msm::front::none> prepare_cancel;
-    // typedef boost::msm::front::Row<PrepareEnterNav, QueryStatusRequest, PrepareEnterNav, send_cancel_request, boost::msm::front::none> prepare_cancel;
-    // typedef boost::msm::front::Row<PrepareEnterNav, NavigationTaskResponse, Done, boost::msm::front::none, boost::msm::front::none> prepare_resp2003;
-    // typedef boost::msm::front::Row<PrepareEnterNav, CancelTaskResponse, Done, boost::msm::front::none, check_resp2004_guard> prepare_resp2004;
-    // typedef boost::msm::front::Row<PrepareEnterNav, QueryStatusResponse, Done, boost::msm::front::none, check_resp_status_completed_guard> prepare_resp_status_done;
-    // typedef boost::msm::front::Row<PrepareEnterNav, QueryStatusResponse, Nav, boost::msm::front::none, check_resp_status_executing_guard> prepare_resp_status_nav;
-    // typedef boost::msm::front::Row<Nav, CancelTaskRequest, Nav, send_cancel_request, boost::msm::front::none> nav_cancel;
-    // typedef boost::msm::front::Row<Nav, CancelTaskResponse, Done, boost::msm::front::none, check_resp2004_guard> nav_resp2004;
-    // typedef boost::msm::front::Row<Nav, NavigationTaskResponse, Done, boost::msm::front::none, boost::msm::front::none> nav_resp2003;
-    // typedef boost::msm::front::Row<Nav, QueryStatusResponse, Done, boost::msm::front::none, check_resp_status_completed_guard> nav_resp_status;
-
     struct transition_table : boost::mpl::vector<
     boost::msm::front::Row<Init, NavigationTaskRequest, PrepareEnterNav, send_nav_request, boost::msm::front::none>,
     boost::msm::front::Row<PrepareEnterNav, CancelTaskRequest, PrepareEnterNav, send_cancel_request, boost::msm::front::none>,
@@ -212,22 +200,12 @@ struct NavStateMachine_ : public boost::msm::front::state_machine_def<NavStateMa
     boost::msm::front::Row<Nav, CancelTaskResponse, Done, boost::msm::front::none, check_resp2004_guard>,
     boost::msm::front::Row<Nav, NavigationTaskResponse, Done, boost::msm::front::none, boost::msm::front::none>,
     boost::msm::front::Row<Nav, QueryStatusResponse, Done, boost::msm::front::none, check_resp_status_completed_guard>
-        // init_to_prepare,
-        // prepare_cancel,
-        // prepare_resp2003,
-        // prepare_resp2004,
-        // prepare_resp_status_done,
-        // prepare_resp_status_nav,
-        // nav_cancel,
-        // nav_resp2004,
-        // nav_resp2003,
-        // nav_resp_status
     > {};
 
     // 处理未定义的转换
     template <class FSM, class Event>
     void no_transition(Event const&, FSM&, int state) {
-        std::cout << "无法处理当前状态(" << state << ")下的事件" << std::endl;
+        std::cout << "[NavFsm:WRN]: 无法处理当前状态(" << state << ")下的事件" << std::endl;
     }
 
     // context引用
