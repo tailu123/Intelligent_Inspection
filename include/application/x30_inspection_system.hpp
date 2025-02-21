@@ -96,6 +96,16 @@ private:
     std::vector<protocol::NavigationPoint> points_;
 
     std::unique_ptr<NavStateProcedure> nav_state_procedure_;
+
+    // 状态查询相关
+    std::atomic<bool> status_query_running_{false};
+    std::thread status_query_thread_;
+    void statusQueryLoop();
+    void startStatusQuery();
+    void stopStatusQuery();
+
+    // 状态查询间隔(毫秒)
+    static constexpr int STATUS_QUERY_INTERVAL_MS = 1000;
 };
 
 } // namespace application

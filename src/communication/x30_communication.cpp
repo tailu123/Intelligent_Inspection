@@ -8,8 +8,9 @@
 namespace x30 {
 namespace communication {
 
-X30Communication::X30Communication(boost::asio::io_context& io_context)
+X30Communication::X30Communication(boost::asio::io_context& io_context, application::MessageQueue& message_queue)
     : io_context_(io_context)
+    , message_queue_(message_queue)
     , socket_(io_context)
     , strand_(io_context.get_executor())
     , is_writing_(false)
@@ -51,9 +52,9 @@ void X30Communication::sendMessage(const protocol::IMessage& message) {
     });
 }
 
-void X30Communication::setMessageCallback(MessageCallback callback) {
-    message_callback_ = std::move(callback);
-}
+// void X30Communication::setMessageCallback(MessageCallback callback) {
+//     message_callback_ = std::move(callback);
+// }
 
 void X30Communication::setErrorCallback(ErrorCallback callback) {
     error_callback_ = std::move(callback);
@@ -166,29 +167,13 @@ void X30Communication::handleError(std::string_view error_msg) {
 }
 
 void X30Communication::processMessage(const std::vector<std::uint8_t>& message_data) {
-    if (!message_callback_) {
-        return;
-    }
-
     try {
-        // std::cout << "X30Communication::processMessage-message_data.size:" << message_data.size() << std::endl;
-        // for (size_t i = 0; i < message_data.size(); ++i) {
-        //     printf("%02X ", message_data[i]);
-        //     if ((i + 1) % 16 == 0) std::cout << std::endl;
-        // }
-
         std::cout << std::endl;
 
         std::string message{reinterpret_cast<const char*>(message_data.data()),
                           message_data.size()};
-        // for (size_t i = 0; i < message.size(); ++i) {
-        //     printf("%02X ", message[i]);
-        //     if ((i + 1) % 16 == 0) std::cout << std::endl;
-        // }
-        // std::cout << std::endl;
-        // std::cout << "收到消息: " << message << std::endl;
         if (auto msg = protocol::MessageFactory::parseMessage(message)) {
-            message_callback_(std::move(msg));
+            message_queue_.push(std::move(msg));
         } else {
             handleError("消息解析失败");
         }
@@ -232,8 +217,9 @@ void X30Communication::handleWrite(const boost::system::error_code& error) {
 }
 
 // AsyncCommunicationManager实现
-AsyncCommunicationManager::AsyncCommunicationManager()
+AsyncCommunicationManager::AsyncCommunicationManager(application::MessageQueue& message_queue)
     : io_context_(std::make_unique<boost::asio::io_context>())
+    , message_queue_(message_queue)
     // , strand_(io_context_->get_executor())
     , work_(std::make_unique<boost::asio::io_context::work>(*io_context_)) {
 }
@@ -244,7 +230,7 @@ AsyncCommunicationManager::~AsyncCommunicationManager() {
 
 void AsyncCommunicationManager::start() {
     if (!communication_) {
-        communication_ = std::make_shared<X30Communication>(*io_context_);
+        communication_ = std::make_shared<X30Communication>(*io_context_, message_queue_);
     }
 
     if (!io_thread_.joinable()) {

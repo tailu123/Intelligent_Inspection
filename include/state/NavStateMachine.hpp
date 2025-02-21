@@ -150,7 +150,7 @@ struct NavStateMachine_ : public boost::msm::front::state_machine_def<NavStateMa
 
     struct send_cancel_request {
         template <class EVT, class FSM, class SourceState, class TargetState>
-        void operator()(EVT const& evt, FSM& fsm, SourceState&, TargetState&) {
+        void operator()(EVT const&, FSM& fsm, SourceState&, TargetState&) {
             // fsm.sendCancelRequest(evt);
             fsm.sendCancelRequest(fsm.context_);
         }
@@ -159,7 +159,7 @@ struct NavStateMachine_ : public boost::msm::front::state_machine_def<NavStateMa
 
     struct send_query_request {
         template <class EVT, class FSM, class SourceState, class TargetState>
-        void operator()(EVT const& evt, FSM& fsm, SourceState&, TargetState&) {
+        void operator()(EVT const&, FSM& fsm, SourceState&, TargetState&) {
             // fsm.sendCancelRequest(evt);
             fsm.sendQueryRequest(fsm.context_);
         }
