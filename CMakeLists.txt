@@ -14,13 +14,14 @@ add_compile_options(-Wall -Wextra)
 
 # 查找Boost库
 find_package(Boost REQUIRED COMPONENTS system filesystem thread)
+find_package(nlohmann_json)
 
 # 添加nlohmann/json
-include(FetchContent)
-FetchContent_Declare(json
-    URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz
-)
-FetchContent_MakeAvailable(json)
+# include(FetchContent)
+# FetchContent_Declare(json
+#     URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz
+# )
+# FetchContent_MakeAvailable(json)
 
 # 添加include目录
 include_directories(
@@ -48,6 +49,13 @@ add_executable(${PROJECT_NAME}
     src/protocol/x30_protocol.cpp
     src/protocol/protocol_header.cpp
     src/common/event_bus.cpp
+    src/common/utils.cpp
+    src/state/nav/nav_actions.cpp
+    # src/common/event.cpp
+    # src/common/event_handler.cpp
+    # src/common/event_dispatcher.cpp
+    # src/common/event_listener.cpp
+    # src/common/event_listener_manager.cpp
 )
 
 # 创建TCP服务器测试程序

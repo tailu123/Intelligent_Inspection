@@ -82,7 +82,7 @@ private:
 
     // 事件处理方法
     void handleMessageResponse(const protocol::IMessage& message);
-    void handleConnectionStatus(bool connected, const std::string& message);
+    // void handleConnectionStatus(bool connected, const std::string& message);
     void handleNavigationStatus(bool completed, const std::string& point, const std::string& status);
 
     // 成员变量
@@ -104,7 +104,7 @@ private:
     std::thread status_query_thread_;
     void statusQueryLoop();
     void startStatusQuery();
-    void stopStatusQuery();
+    // void stopStatusQuery();
 
     // 状态查询间隔(毫秒)
     static constexpr int STATUS_QUERY_INTERVAL_MS = 1000;

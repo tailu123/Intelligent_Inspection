@@ -5,72 +5,8 @@
 #include "protocol/x30_protocol.hpp"
 #include <iostream>
 #include <chrono>
-#include <iomanip>
-#include <sstream>
-#include <filesystem>
-#include <fstream>
-#include <optional>
-
-
-namespace  {
-// TODO: move to suitable place
-// 辅助函数：加载默认导航点
-std::vector<protocol::NavigationPoint> loadDefaultNavigationPoints(const std::string& configPath) {
-    std::vector<protocol::NavigationPoint> points;
-    try {
-        // 检查文件是否存在
-        if (!std::filesystem::exists(configPath)) {
-            std::cerr << "配置文件不存在: " << configPath << std::endl;
-            return points;
-        }
-
-        // 读取JSON文件
-        std::ifstream file(configPath);
-        nlohmann::json jsonArray;
-        file >> jsonArray;
-
-        // 解析每个导航点
-        for (const auto& jsonPoint : jsonArray) {
-            points.push_back(protocol::NavigationPoint::fromJson(jsonPoint));
-        }
-
-        std::cout << "成功从配置文件加载了 " << points.size() << " 个导航点" << std::endl;
-    } catch (const std::exception& e) {
-        std::cerr << "加载配置文件失败: " << e.what() << std::endl;
-    }
-    return points;
-}
-
-// 辅助函数：加载默认导航点
-std::vector<protocol::NavigationPoint> loadNavigationPoints() {
-    std::filesystem::path exePath = std::filesystem::canonical("/proc/self/exe");
-    std::filesystem::path projectRoot = exePath.parent_path().parent_path();
-    std::filesystem::path configPath = projectRoot / "config" / "default_params.json";
-
-    std::vector<protocol::NavigationPoint> points;
-    points = loadDefaultNavigationPoints(configPath.string());
-    if (points.empty()) {
-        std::cout << "警告: 未能加载默认导航点，将使用示例导航点\n";
-        points = {
-            {0, 1, -4.2181582, 3.4758759, -0.056337897, -3.044234, 0, 0, 1, 0, 0, 0, 0, 0},
-            {0, 2, -9.1335344, 2.9462891, 0.093159825, -1.4948614, 0, 0, 1, 0, 0, 0, 0, 0}
-        };
-    }
-
-    return points;
-}
-
-// 辅助函数：获取当前时间戳
-// static std::string getCurrentTimestamp() {
-//     auto now = std::chrono::system_clock::now();
-//     auto time = std::chrono::system_clock::to_time_t(now);
-//     std::stringstream ss;
-//     ss << std::put_time(std::localtime(&time), "%Y-%m-%d %H:%M:%S");
-//     return ss.str();
-// }
-}   // namespace
-
-
+#include "common/utils.hpp"
+#include "state/nav/nav_context.hpp"
 
 namespace application {
 X30InspectionSystem::X30InspectionSystem()
@@ -84,7 +20,7 @@ X30InspectionSystem::~X30InspectionSystem() {
 
 bool X30InspectionSystem::initialize(const std::string& host, uint16_t port) {
     // 加载导航点
-    points_ = loadNavigationPoints();
+    points_ = common::loadNavigationPoints();
 
     // 初始化通信管理器
     // 启动通信管理器
@@ -114,18 +50,25 @@ bool X30InspectionSystem::initialize(const std::string& host, uint16_t port) {
 }
 
 void X30InspectionSystem::shutdown() {
-    if (running_) {
-        running_ = false;
-        if (message_thread_.joinable()) {
-            message_thread_.join();
+    try {
+        status_query_running_ = false;
+        if (status_query_thread_.joinable()) {
+            status_query_thread_.join();
         }
-    }
 
-    if (comm_manager_) {
-        comm_manager_->getCommunication()->disconnect();
-    }
+        if (running_) {
+            running_ = false;
+            if (message_thread_.joinable()) {
+                message_thread_.join();
+            }
+        }
 
-    stopStatusQuery();   // 停止状态查询
+        if (comm_manager_) {
+            comm_manager_->getCommunication()->disconnect();
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "系统关闭异常: " << e.what() << std::endl;
+    }
 }
 
 void X30InspectionSystem::setCallback(const InspectionCallback& callback) {
@@ -166,11 +109,21 @@ bool X30InspectionSystem::startInspection() {
         // };
 
         // 创建导航过程管理器
+        // TODO: 隐藏构造细节
+        // state::NavigationContext nav_context{
+        //     points_,
+        //     common::EventBus::getInstance(),
+        //     message_queue_,
+        //     comm_manager_->getCommunication()
+        // };
+        // nav_state_procedure_ = std::make_unique<procedure::NavigationProcedure>(nav_context);
+        //
+        //
+        //
         nav_state_procedure_ = std::make_unique<procedure::NavigationProcedure>(
             points_,
             *comm_manager_,
             common::EventBus::getInstance(),
-            *this,
             message_queue_);
         // nav_state_procedure_ = std::make_unique<NavStateProcedure>(std::move(nav_context));
         nav_state_procedure_->start();
@@ -197,9 +150,9 @@ bool X30InspectionSystem::startInspection() {
 }
 
 bool X30InspectionSystem::cancelInspection() {
-    if (!is_inspecting_) {
-        return false;
-    }
+    // if (!is_inspecting_) {
+    //     return false;
+    // }
     // nav_state_procedure_->process_message(const std::shared_ptr<Event> &event);
     // 发布取消请求事件
     // auto event = std::make_shared<CancelRequestEvent>();
@@ -214,8 +167,8 @@ bool X30InspectionSystem::cancelInspection() {
     }
 
 
-    stopStatusQuery();   // 停止状态查询
-    is_inspecting_ = false;
+    // stopStatusQuery();   // 停止状态查询
+    // is_inspecting_ = false;
 
     return true;
 }
@@ -260,6 +213,8 @@ void X30InspectionSystem::messageProcessingLoop() {
                     if (nav_state_procedure_) {
                         nav_state_procedure_.reset();
                     }
+                    is_inspecting_ = false;
+                    callback_.onCompleted();
                     break;
                 }
                 default: {
@@ -329,13 +284,13 @@ void X30InspectionSystem::handleError(const std::string& error) {
     }
 }
 
-void X30InspectionSystem::handleConnectionStatus(bool connected, const std::string& message) {
-    if (callback_.onStatusUpdate) {
-        callback_.onStatusUpdate(message);
-    }
-}
+// void X30InspectionSystem::handleConnectionStatus(bool connected, const std::string& message) {
+//     if (callback_.onStatusUpdate) {
+//         callback_.onStatusUpdate(message);
+//     }
+// }
 
-void X30InspectionSystem::handleNavigationStatus(bool completed, const std::string& point, const std::string& status) {
+void X30InspectionSystem::handleNavigationStatus(bool completed, const std::string&, const std::string& status) {
     if (completed && callback_.onCompleted) {
         callback_.onCompleted();
         is_inspecting_ = false;
@@ -352,23 +307,27 @@ void X30InspectionSystem::startStatusQuery() {
     status_query_thread_ = std::thread(&X30InspectionSystem::statusQueryLoop, this);
 }
 
-void X30InspectionSystem::stopStatusQuery() {
-    status_query_running_ = false;
-    if (status_query_thread_.joinable()) {
-        status_query_thread_.join();
-    }
-}
+// void X30InspectionSystem::stopStatusQuery() {
+//     status_query_running_ = false;
+//     if (status_query_thread_.joinable()) {
+//         status_query_thread_.join();
+//     }
+// }
 
 void X30InspectionSystem::statusQueryLoop() {
     while (status_query_running_) {
         // 等待指定时间间隔
         std::this_thread::sleep_for(std::chrono::milliseconds(STATUS_QUERY_INTERVAL_MS));
 
-        if (is_inspecting_ && nav_state_procedure_) {
+        if (nav_state_procedure_) {
+            std::cout << "状态查询发送\n";
+
+        // if (is_inspecting_ && nav_state_procedure_) {
             // 创建并发送查询请求
             protocol::QueryStatusRequest request;
-            request.timestamp = getCurrentTimestamp();
-            message_queue_.push(std::make_unique<protocol::QueryStatusRequest>(std::move(request)));
+            request.timestamp = common::getCurrentTimestamp();
+            // message_queue_.push(std::make_unique<protocol::QueryStatusRequest>(std::move(request)));
+            comm_manager_->getCommunication()->sendMessage(request);
         }
 
     }

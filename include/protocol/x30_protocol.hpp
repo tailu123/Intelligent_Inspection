@@ -5,17 +5,7 @@
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <rapidxml/rapidxml.hpp>
-#include <chrono>
-#include <iomanip>
 
-// 辅助函数：获取当前时间戳
-static std::string getCurrentTimestamp() {
-    auto now = std::chrono::system_clock::now();
-    auto time = std::chrono::system_clock::to_time_t(now);
-    std::stringstream ss;
-    ss << std::put_time(std::localtime(&time), "%Y-%m-%d %H:%M:%S");
-    return ss.str();
-}
 
 namespace protocol {
 
@@ -23,8 +13,6 @@ namespace protocol {
 enum class MessageType {
     // 内部消息类型
     PROCEDURE_RESET = 0,
-
-
 
     // 请求消息类型
     NAVIGATION_TASK_REQ = 1003,

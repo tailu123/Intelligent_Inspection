@@ -110,21 +110,6 @@ void X30Communication::doRead() {
                             // 4. 继续读取下一条消息
                             doRead();
                         }));
-                // // 预分配消息体缓冲区
-                // try {
-                //     message_buffer_.resize(current_header_.length);
-                // } catch (const std::exception& e) {
-                //     // handleError(fmt::format("分配消息缓冲区失败: {}", e.what()));
-                //     std::string msg = "分配消息缓冲区失败: ";
-                //     msg += e.what();
-                //     // handleError({"分配消息缓冲区失败: " + e.what()});
-                //     handleError(msg);
-                //     return;
-                // }
-                // std::cout << "X30Communication::doRead-current_header_.length:" << current_header_.length << std::endl;
-
-                // received_bytes_ = 0;
-                // readMessageBody();
             }));
 }
 

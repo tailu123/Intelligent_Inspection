@@ -34,7 +34,7 @@ private:
         auto header = std::make_shared<protocol::ProtocolHeader>();
         boost::asio::async_read(*socket,
             boost::asio::buffer(header.get(), sizeof(protocol::ProtocolHeader)),
-            [this, socket, header](boost::system::error_code ec, std::size_t length) {
+            [this, socket, header](boost::system::error_code ec, std::size_t) {
                 if (ec) {
                     std::cout << "读取协议头错误: " << ec.message() << std::endl;
                     return;
@@ -52,7 +52,7 @@ private:
                         std::cout << "收到消息，长度: " << length << std::endl;
 
                         // 发送响应
-                        sendResponse(socket, header->message_id);
+                        // sendResponse(socket, header->message_id);
 
                         // 继续读取下一条消息
                         startRead(socket);
@@ -62,44 +62,39 @@ private:
 
     void sendResponse(std::shared_ptr<tcp::socket> socket, uint16_t message_id) {
         std::unique_ptr<protocol::IMessage> response;
-        auto resp = std::make_unique<protocol::QueryStatusResponse>();
-        resp->errorCode = protocol::ErrorCode::SUCCESS;
-        resp->value = 1;
-        resp->status = protocol::NavigationStatus::EXECUTING;
-        resp->timestamp = "2024-03-21 10:00:00";
-        response = std::move(resp);
 
-        // // 根据消息ID创建对应的响应
-        // switch (message_id) {
-        //     case 1003: {  // NAVIGATION_TASK_REQ
-        //         auto resp = std::make_unique<protocol::NavigationTaskResponse>();
-        //         resp->errorCode = protocol::ErrorCode::SUCCESS;
-        //         resp->value = 1;
-        //         resp->errorStatus = 0;
-        //         resp->timestamp = "2024-03-21 10:00:00";
-        //         response = std::move(resp);
-        //         break;
-        //     }
-        //     case 1004: {  // CANCEL_TASK_REQ
-        //         auto resp = std::make_unique<protocol::CancelTaskResponse>();
-        //         resp->errorCode = protocol::ErrorCode::SUCCESS;
-        //         resp->timestamp = "2024-03-21 10:00:00";
-        //         response = std::move(resp);
-        //         break;
-        //     }
-        //     case 1007: {  // QUERY_STATUS_REQ
-        //         auto resp = std::make_unique<protocol::QueryStatusResponse>();
-        //         resp->errorCode = protocol::ErrorCode::SUCCESS;
-        //         resp->value = 1;
-        //         resp->status = protocol::NavigationStatus::EXECUTING;
-        //         resp->timestamp = "2024-03-21 10:00:00";
-        //         response = std::move(resp);
-        //         break;
-        //     }
-        //     default:
-        //         std::cout << "未知的消息ID: " << message_id << std::endl;
-        //         return;
-        // }
+        // 根据消息ID创建对应的响应
+        switch (message_id) {
+            case 1003: {  // NAVIGATION_TASK_REQ
+                auto resp = std::make_unique<protocol::NavigationTaskResponse>();
+                resp->errorCode = protocol::ErrorCode::SUCCESS;
+                resp->value = 1;
+                resp->errorStatus = 0;
+                resp->timestamp = "2024-03-21 10:00:00";
+                response = std::move(resp);
+                break;
+            }
+            case 1004: {  // CANCEL_TASK_REQ
+                auto resp = std::make_unique<protocol::CancelTaskResponse>();
+                resp->errorCode = protocol::ErrorCode::SUCCESS;
+                resp->timestamp = "2024-03-21 10:00:00";
+                response = std::move(resp);
+                break;
+            }
+            case 1007: {  // QUERY_STATUS_REQ
+                auto resp = std::make_unique<protocol::QueryStatusResponse>();
+                resp->errorCode = protocol::ErrorCode::SUCCESS;
+                resp->value = 1;
+                resp->status = protocol::NavigationStatus::EXECUTING;
+                resp->timestamp = "2024-03-21 10:00:00";
+                response = std::move(resp);
+                break;
+            }
+            default: {
+                std::cout << "未知的消息ID: " << message_id << std::endl;
+                return;
+            }
+        }
 
         if (response) {
             // 序列化响应（包含协议头）
