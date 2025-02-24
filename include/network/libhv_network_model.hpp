@@ -1,6 +1,12 @@
 #pragma once
 
 #include "network/base_network_model.hpp"
+// #include "hv/TcpClient.h"
+#include <atomic>
+#include <queue>
+#include <mutex>
+#include <memory>
+#include "protocol/protocol_header.hpp"
 
 namespace common
 {
@@ -11,17 +17,15 @@ namespace network {
 
 class LibhvNetworkModel : public BaseNetworkModel {
 public:
-LibhvNetworkModel(common::MessageQueue &message_queue);
-~LibhvNetworkModel();
+    explicit LibhvNetworkModel(common::MessageQueue&) { }
+    ~LibhvNetworkModel() override = default;
 
-void connect(const std::string& host, uint16_t port) override;
-void disconnect() override;
-bool isConnected() const override;
+    bool connect(const std::string& host, uint16_t port) override { return true; }
+    void disconnect() override {}
+    bool isConnected() const override { return true; }
 
-void sendMessage(const protocol::IMessage& message) override;
+    void sendMessage(const protocol::IMessage& message) override {}
 
-void setErrorCallback(ErrorCallback callback) override;
-private:
-
+    void setErrorCallback(ErrorCallback callback) override {}
 };
 } // namespace network

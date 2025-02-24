@@ -5,30 +5,29 @@
 #include <thread>
 #include "common/message_queue.hpp"
 #include "network/base_network_model.hpp"
+#include "network/network_model_factory.hpp"
 
 namespace network {
 
 
 // 异步通信管理器
-class AsyncCommunicationManager {
+// 换个名字，叫：NetworkModelManager
+class NetworkModelManager {
 public:
-    AsyncCommunicationManager(common::MessageQueue& message_queue);
-    ~AsyncCommunicationManager();
+    explicit NetworkModelManager(network::NetworkModelType model_type, common::MessageQueue& message_queue);
+    ~NetworkModelManager();
 
     // 启动和停止
     void start();
     void stop();
 
-    // 获取通信实例
-    std::shared_ptr<BaseNetworkModel> getCommunication();
+    // 获取网络模型实例
+    std::shared_ptr<BaseNetworkModel> getNetworkModel();
 
 private:
-    std::unique_ptr<boost::asio::io_context> io_context_;
-    // boost::asio::strand<boost::asio::io_context::executor_type> strand_;
+    network::NetworkModelType model_type_;
+    std::shared_ptr<BaseNetworkModel> network_model_;
     common::MessageQueue& message_queue_;
-    std::thread io_thread_;
-    std::unique_ptr<boost::asio::io_context::work> work_;
-    std::shared_ptr<BaseNetworkModel> communication_;
 };
 
 } // namespace network

@@ -69,11 +69,12 @@ private:
 
     // 消息处理循环
     void messageProcessingLoop();
+
     // 响应处理方法
     void handleMessageResponse(const protocol::IMessage& message);
 
     // 网络通信接口
-    std::unique_ptr<network::AsyncCommunicationManager> comm_manager_;
+    std::unique_ptr<network::NetworkModelManager> network_model_manager_;
 
     // TODO: optimize by eventBus, instead of callback_
     InspectionCallback callback_;

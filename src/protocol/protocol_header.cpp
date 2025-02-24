@@ -56,4 +56,8 @@ bool ProtocolHeader::validateSyncBytes() const {
            sync_byte4 == HEADER_4;
 }
 
+uint16_t ProtocolHeader::getBodySize() const {
+    return length;
+}
+
 } // namespace protocol

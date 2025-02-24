@@ -8,6 +8,7 @@ using ErrorCallback = std::function<void(const std::string&)>;
 
 class BaseNetworkModel {
 public:
+virtual ~BaseNetworkModel() = default;
 virtual bool connect(const std::string& host, uint16_t port) = 0;
 virtual void disconnect() = 0;
 virtual bool isConnected() const = 0;

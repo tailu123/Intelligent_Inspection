@@ -3,13 +3,17 @@
 #include "common/message_queue.hpp"
 
 namespace network {
-    AsioNetworkModel::AsioNetworkModel(boost::asio::io_context& io_context, common::MessageQueue& message_queue)
-    : io_context_(io_context)
+    AsioNetworkModel::AsioNetworkModel(common::MessageQueue& message_queue)
+    : io_context_(std::make_unique<boost::asio::io_context>())
+    , work_(std::make_unique<boost::asio::io_context::work>(*io_context_))
     , message_queue_(message_queue)
-    , socket_(io_context)
-    , strand_(io_context.get_executor())
-    , is_writing_(false)
+    , socket_(*io_context_)
+    , strand_(io_context_->get_executor())
 {
+    // IO线程会在构造时启动
+    io_thread_ = std::thread([this]() {
+        io_context_->run();
+    });
 }
 
 AsioNetworkModel::~AsioNetworkModel() {
@@ -17,7 +21,7 @@ AsioNetworkModel::~AsioNetworkModel() {
 }
 
 bool AsioNetworkModel::connect(const std::string& host, uint16_t port) {
-    boost::asio::ip::tcp::resolver resolver(io_context_);
+    boost::asio::ip::tcp::resolver resolver(*io_context_);
     auto endpoints = resolver.resolve(host, std::to_string(port));
     return doConnect(*endpoints.begin());
 }
@@ -26,6 +30,13 @@ void AsioNetworkModel::disconnect() {
     if (socket_.is_open()) {
         boost::system::error_code ec;
         socket_.close(ec);
+    }
+    if (io_context_) {
+        work_.reset();
+        io_context_->stop();
+        if (io_thread_.joinable()) {
+            io_thread_.join();
+        }
     }
 }
 
@@ -127,11 +138,9 @@ void AsioNetworkModel::processMessage(const std::vector<std::uint8_t>& message_d
 
 void AsioNetworkModel::doWrite() {
     if (write_queue_.empty()) {
-        is_writing_ = false;
         return;
     }
 
-    is_writing_ = true;
     boost::asio::async_write(socket_,
         boost::asio::buffer(write_queue_.front()),
         boost::asio::bind_executor(strand_,

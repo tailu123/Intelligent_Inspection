@@ -9,9 +9,12 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
+# 添加 libhv 子模块
+# add_subdirectory(third_party/libhv)
 
 # 添加编译选项
 add_compile_options(-Wall -Wextra)
+
 
 # 查找Boost库
 find_package(Boost REQUIRED COMPONENTS system filesystem thread)
@@ -25,6 +28,7 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_SOURCE_DIR}/third_party
     ${Boost_INCLUDE_DIRS}
+    # ${libhv_INCLUDE_DIRS}
 )
 
 # 添加源文件
@@ -45,6 +49,7 @@ add_executable(${PROJECT_NAME}
     src/network/x30_communication.cpp
     src/network/asio_network_model.cpp
     src/network/epoll_network_model.cpp
+    # src/network/libhv_network_model.cpp
     src/protocol/x30_protocol.cpp
     src/protocol/protocol_header.cpp
     src/common/event_bus.cpp
@@ -72,6 +77,7 @@ target_link_libraries(${PROJECT_NAME}
     pthread
     nlohmann_json::nlohmann_json
     fmt
+    # hv
 )
 
 # 链接TCP服务器测试程序
@@ -81,4 +87,8 @@ target_link_libraries(tcp_server
     pthread
     nlohmann_json::nlohmann_json
     fmt
+    # hv
 )
+
+# 可选：设置 C++ 编译选项
+target_compile_options(${PROJECT_NAME} PRIVATE -Wall)

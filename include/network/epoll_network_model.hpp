@@ -17,7 +17,7 @@ namespace network {
 class EpollNetworkModel : public BaseNetworkModel {
 public:
     explicit EpollNetworkModel(common::MessageQueue& message_queue);
-    ~EpollNetworkModel();
+    ~EpollNetworkModel() override;
 
     bool connect(const std::string& host, uint16_t port) override;
     void disconnect() override;
@@ -51,7 +51,7 @@ private:
     std::mutex write_mutex_;
     ErrorCallback error_callback_;
 
-    static const int MAX_BUFFER_SIZE = 4096;
+    static const ssize_t MAX_BUFFER_SIZE = 4096;
     static const int MAX_EVENTS = 10;
 };
 

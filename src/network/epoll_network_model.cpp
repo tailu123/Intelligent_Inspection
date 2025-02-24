@@ -7,7 +7,10 @@
 #include <errno.h>
 #include <string.h>
 #include <iostream>
-
+#include "protocol/protocol_header.hpp"
+#include <algorithm>
+#include <vector>
+#include "common/message_queue.hpp"
 namespace network {
 
 EpollNetworkModel::EpollNetworkModel(common::MessageQueue& message_queue)
@@ -83,7 +86,6 @@ bool EpollNetworkModel::connect(const std::string& host, uint16_t port) {
 
     struct epoll_event ev;
     ev.events = EPOLLIN | EPOLLET;
-    // ev.events = EPOLLIN | EPOLLOUT | EPOLLET;
     ev.data.fd = socket_fd_;
     if (epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, socket_fd_, &ev) == -1) {
         close(socket_fd_);
@@ -162,16 +164,43 @@ void EpollNetworkModel::poll() {
 }
 
 bool EpollNetworkModel::handleRead() {
-    char buffer[MAX_BUFFER_SIZE];
+    // char buffer[MAX_BUFFER_SIZE];
+
     while (true) {
-        ssize_t n = read(socket_fd_, buffer, MAX_BUFFER_SIZE);
+        // 接收并验证协议头
+        protocol::ProtocolHeader header;
+        ssize_t n = read(socket_fd_, &header, sizeof(header));
         if (n > 0) {
-            // 处理读取到的数据
-            std::cout << "Received message: " << std::string(buffer, n) << std::endl;
-            // TODO: message_queue_ push
-            // if (message_callback_) {
-            //     message_callback_(std::string(buffer, n));
-            // }
+            if (header.validateSyncBytes()) {
+                // 读取消息体
+                ssize_t body_size = header.getBodySize();
+                if (body_size > 0) {
+                    // 读取消息体
+                    std::vector<std::uint8_t> buffer(body_size);
+                    ssize_t bytes_read = 0;
+                    while (bytes_read < body_size) {
+                        ssize_t bytes_to_read = std::min(body_size - bytes_read, MAX_BUFFER_SIZE);
+                        ssize_t bytes_read_now = read(socket_fd_, buffer.data() + bytes_read, bytes_to_read);
+                        if (bytes_read_now > 0) {
+                            bytes_read += bytes_read_now;
+                            std::cout << "Read " << bytes_read_now << " bytes" << std::endl;
+                        } else if (bytes_read_now == 0) {
+                            return false;  // 连接关闭
+                        } else if (errno != EAGAIN && errno != EWOULDBLOCK) {
+                            return false;  // 发生错误
+                        }
+                    }
+
+                    // 处理消息
+                    std::string message(buffer.begin(), buffer.begin() + bytes_read);
+                    if (auto msg = protocol::MessageFactory::parseMessage(message)) {
+                        message_queue_.push(std::move(msg));
+                    } else {
+                        std::cout << "Message parse failed" << std::endl;
+                        return false;  // 消息解析失败
+                    }
+                }
+            }
         } else if (n == 0) {
             return false;  // 连接关闭
         } else {

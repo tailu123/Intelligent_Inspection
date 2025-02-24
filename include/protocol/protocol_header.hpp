@@ -18,6 +18,7 @@ struct ProtocolHeader {
     explicit ProtocolHeader(uint16_t length);
 
     bool validateSyncBytes() const;
+    uint16_t getBodySize() const;
 
     // static constexpr size_t SIZE = 16;  // 头部固定16字节
 };

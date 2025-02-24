@@ -20,11 +20,13 @@ X30InspectionSystem::~X30InspectionSystem() {
 
 bool X30InspectionSystem::initialize(const std::string& host, uint16_t port) {
     // 初始化通信管理器
-    comm_manager_ = std::make_unique<network::AsyncCommunicationManager>(message_queue_);
-    comm_manager_->start();
+    network_model_manager_ = std::make_unique<network::NetworkModelManager>(
+        network::NetworkModelType::ASIO, message_queue_);
+    network_model_manager_->start();
 
+    // TODO: 隐藏到 start() 中
     // 设置错误回调
-    auto comm = comm_manager_->getCommunication();
+    auto comm = network_model_manager_->getNetworkModel();
     comm->setErrorCallback([this](const std::string& error) {
         handleError(error);
     });
@@ -52,8 +54,8 @@ void X30InspectionSystem::shutdown() {
             message_thread_.join();
         }
 
-        if (comm_manager_) {
-            comm_manager_->getCommunication()->disconnect();
+        if (network_model_manager_) {
+            network_model_manager_->getNetworkModel()->disconnect();
         }
     } catch (const std::exception& e) {
         std::cerr << "系统关闭异常: " << e.what() << std::endl;
@@ -65,7 +67,7 @@ void X30InspectionSystem::setCallback(const InspectionCallback& callback) {
 }
 
 bool X30InspectionSystem::isConnected() const {
-    return comm_manager_ && comm_manager_->getCommunication()->isConnected();
+    return network_model_manager_ && network_model_manager_->getNetworkModel()->isConnected();
 }
 
 bool X30InspectionSystem::startInspection() {
@@ -83,7 +85,7 @@ bool X30InspectionSystem::startInspection() {
         state::NavigationContext nav_context{
             common::EventBus::getInstance(),
             message_queue_,
-            comm_manager_->getCommunication()
+            network_model_manager_->getNetworkModel()
         };
         nav_state_procedure_ = std::make_unique<procedure::NavigationProcedure>(std::move(nav_context));
         nav_state_procedure_->start();
@@ -108,7 +110,7 @@ bool X30InspectionSystem::cancelInspection() {
         protocol::CancelTaskRequest request;
         request.timestamp = common::getCurrentTimestamp();
         std::cout << "用户触发发送1004 Request: " << request.timestamp << std::endl;
-        comm_manager_->getCommunication()->sendMessage(request);
+        network_model_manager_->getNetworkModel()->sendMessage(request);
         return true;
     }
 
@@ -124,7 +126,7 @@ bool X30InspectionSystem::queryStatus() {
         protocol::QueryStatusRequest request;
         request.timestamp = common::getCurrentTimestamp();
         std::cout << "用户触发发送1007 Request: " << request.timestamp << std::endl;
-        comm_manager_->getCommunication()->sendMessage(request);
+        network_model_manager_->getNetworkModel()->sendMessage(request);
         return true;
     }
 
@@ -241,7 +243,7 @@ void X30InspectionSystem::statusQueryLoop() {
             protocol::QueryStatusRequest request;
             request.timestamp = common::getCurrentTimestamp();
             std::cout << "定时发送1007 Request: " << request.timestamp << std::endl;
-            comm_manager_->getCommunication()->sendMessage(request);
+            network_model_manager_->getNetworkModel()->sendMessage(request);
         }
 
     }
