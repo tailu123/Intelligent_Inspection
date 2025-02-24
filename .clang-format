@@ -1,0 +1,220 @@
+Language: Cpp  # 指定格式化语言为C++
+BasedOnStyle: Google  # 基于Google的代码风格
+
+############################################################################
+# 对齐和缩进
+############################################################################
+
+# 访问说明符(public、private等)的偏移，相对于类定义缩进-1个空格
+AccessModifierOffset: -1
+
+# 开括号(开圆括号、开尖括号、开方括号)后的对齐方式:
+# Align（对齐）、DontAlign（不对齐）、AlwaysBreak（总是在开括号后换行）
+AlignAfterOpenBracket: Align
+
+# 连续赋值时，对齐所有等号
+AlignConsecutiveAssignments: false
+
+# 连续声明时，对齐所有声明的变量名
+AlignConsecutiveDeclarations: false
+
+# 水平对齐二元和三元表达式的操作数
+AlignOperands: Align
+
+# 对齐连续的尾随注释
+AlignTrailingComments: true
+
+# 续行缩进宽度
+ContinuationIndentWidth: 4
+
+# 标准缩进宽度
+IndentWidth: 2
+
+# 缩进case标签
+IndentCaseLabels: true
+
+# 预处理指令不缩进
+IndentPPDirectives: None
+
+# 命名空间内部不额外缩进
+#   None：在命名空间内不进行额外缩进。
+#   Inner：仅在内部嵌套的命名空间中进行缩进。
+#   All：在所有命名空间中进行缩进
+NamespaceIndentation: None
+
+# 制表位宽度
+TabWidth: 2
+
+# 不使用制表符进行缩进
+UseTab: Never
+
+############################################################################
+# 空行和空格
+############################################################################
+
+# 在代码块开始处保持空行
+KeepEmptyLinesAtTheStartOfBlocks: true
+
+# 最多保留的连续空行数量
+MaxEmptyLinesToKeep: 1
+
+# C风格强制转换后无空格
+SpaceAfterCStyleCast: false
+
+# 逻辑非(!)后无空格
+SpaceAfterLogicalNot: false
+
+# template关键字后有空格
+SpaceAfterTemplateKeyword: true
+
+# 赋值运算符前有空格
+SpaceBeforeAssignmentOperators: true
+
+# C++11花括号初始化列表前无空格
+SpaceBeforeCpp11BracedList: false
+
+# 构造函数初始化冒号前有空格
+SpaceBeforeCtorInitializerColon: true
+
+# 继承冒号前有空格
+SpaceBeforeInheritanceColon: true
+
+# 控制语句圆括号前有空格
+SpaceBeforeParens: ControlStatements
+
+# range-based for循环冒号前有空格
+SpaceBeforeRangeBasedForLoopColon: true
+
+# 方括号前无空格
+SpaceBeforeSquareBrackets: false
+
+# 空括号内无空格
+SpaceInEmptyParentheses: false
+
+# 尾随注释前的空格数
+SpacesBeforeTrailingComments: 2
+
+# 尖括号内无空格
+SpacesInAngles: false
+
+# C风格强制转换括号内无空格
+SpacesInCStyleCastParentheses: false
+
+# 容器字面量内无空格
+SpacesInContainerLiterals: false
+
+# 圆括号内无空格
+SpacesInParentheses: false
+
+# 方括号内无空格
+SpacesInSquareBrackets: false
+
+###################
+# 大括号和控制结构
+###################
+
+# 在控制结构之前的大括号处理方式
+BreakBeforeBraces: Custom
+
+# 大括号包装规则
+BraceWrapping:
+  AfterCaseLabel: false    # case标签之后不添加新行大括号
+  AfterClass: false        # 类定义之后不添加新行大括号
+  AfterStruct: false       # 结构体定义之后不添加新行大括号
+  AfterControlStatement: Never  # 控制语句if\while之后从不添加新行大括号
+  AfterEnum: false         # 枚举定义之后不添加新行大括号
+  AfterFunction: false     # 函数定义之后不添加新行大括号
+  AfterNamespace: false    # 命名空间之后不添加新行大括号
+  AfterUnion: false        # 联合体定义之后不添加新行大括号
+  AfterExternBlock: false  # extern "C"块之后不添加新行大括号
+  BeforeCatch: true        # catch之前添加新行大括号
+  BeforeElse: true         # else之前添加新行大括号
+  BeforeLambdaBody: false  # lambda主体之前不添加新行大括号
+  IndentBraces: false      # 不缩进单独行上的大括号
+  SplitEmptyFunction: true  # 不拆分空函数
+  SplitEmptyRecord: true   # 不拆分空记录
+  SplitEmptyNamespace: true # 不拆分空命名空间
+
+# 二元运算符之前的断行
+BreakBeforeBinaryOperators: None
+
+# 三元运算符之前的断行
+BreakBeforeTernaryOperators: true
+
+# 构造函数初始化列表前的断行
+BreakConstructorInitializers: BeforeColon
+
+# 继承列表前的断行
+BreakInheritanceList: BeforeColon
+
+# 总是在返回类型之后换行
+AlwaysBreakAfterReturnType: None
+
+# 总是中断模板声明
+AlwaysBreakTemplateDeclarations: Yes
+
+# 将参数打包在一起，即使这可能导致超出列限制
+BinPackArguments: true
+
+# 不允许短case标签在单行上
+AllowShortCaseLabelsOnASingleLine: false
+
+# 允许简短函数在单行上
+AllowShortFunctionsOnASingleLine: false
+
+# 禁止if语句在单行上，以避免冲突，每个"if语句"在编码时都应包含大括号
+AllowShortIfStatementsOnASingleLine: Never
+
+# 允许内联简短lambda表达式在单行上
+AllowShortLambdasOnASingleLine: Inline
+
+# 禁止循环在单行上
+AllowShortLoopsOnASingleLine: false
+
+# 允许将所有函数参数放在下一行
+AllowAllArgumentsOnNextLine: true
+
+# 允许将构造函数的所有初始化列表放在下一行
+AllowAllConstructorInitializersOnNextLine: true
+
+# 不允许将声明的所有参数放在下一行
+AllowAllParametersOfDeclarationOnNextLine: false
+
+# 允许在单行上放置空块（如{}），但不包括有内容的块
+AllowShortBlocksOnASingleLine: Empty
+
+# 不压缩命名空间
+CompactNamespaces: false
+
+# 修复命名空间注释
+FixNamespaceComments: true
+
+# 保留原有的#include块顺序
+IncludeBlocks: Preserve
+
+# 不重排注释
+ReflowComments: false
+
+# 设置C++标准版本
+Standard: c++11
+
+# 每行最大字符数限制
+ColumnLimit: 120
+
+# 不推导指针对齐方式，确保*或&左对齐
+DerivePointerAlignment: false
+
+# 指针对齐到左边
+PointerAlignment: Left
+
+# 访问修饰符前是否需要空行，基于逻辑块
+EmptyLineBeforeAccessModifier: LogicalBlock
+
+# Objective-C属性之后没有空格
+ObjCSpaceAfterProperty: false
+
+# Objective-C协议列表前有空格
+ObjCSpaceBeforeProtocolList: true
+
+# 使用C++11风格的花括号初始化列表
+Cpp11BracedListStyle: true

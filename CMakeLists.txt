@@ -3,6 +3,7 @@ project(x30_inspection_system VERSION 1.0)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # 设置编译选项
 if(NOT CMAKE_BUILD_TYPE)
@@ -14,14 +15,10 @@ add_compile_options(-Wall -Wextra)
 
 # 查找Boost库
 find_package(Boost REQUIRED COMPONENTS system filesystem thread)
+# 查找nlohmann_json库
 find_package(nlohmann_json)
-
-# 添加nlohmann/json
-# include(FetchContent)
-# FetchContent_Declare(json
-#     URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz
-# )
-# FetchContent_MakeAvailable(json)
+# 查找fmt库
+find_package(fmt)
 
 # 添加include目录
 include_directories(
@@ -46,11 +43,14 @@ add_executable(${PROJECT_NAME}
     src/common/message_queue.cpp
     src/procedure/nav_procedure/nav_procedure.cpp
     src/network/x30_communication.cpp
+    src/network/asio_network_model.cpp
+    src/network/epoll_network_model.cpp
     src/protocol/x30_protocol.cpp
     src/protocol/protocol_header.cpp
     src/common/event_bus.cpp
     src/common/utils.cpp
     src/state/nav/nav_actions.cpp
+    src/state/nav/nav_guards.cpp
     # src/common/event.cpp
     # src/common/event_handler.cpp
     # src/common/event_dispatcher.cpp
@@ -71,6 +71,7 @@ target_link_libraries(${PROJECT_NAME}
     ${Boost_LIBRARIES}
     pthread
     nlohmann_json::nlohmann_json
+    fmt
 )
 
 # 链接TCP服务器测试程序
@@ -79,4 +80,5 @@ target_link_libraries(tcp_server
     ${Boost_LIBRARIES}
     pthread
     nlohmann_json::nlohmann_json
+    fmt
 )

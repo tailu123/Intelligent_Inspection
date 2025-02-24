@@ -1,0 +1,243 @@
+#include "network/epoll_network_model.hpp"
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <string.h>
+#include <iostream>
+
+namespace network {
+
+EpollNetworkModel::EpollNetworkModel(common::MessageQueue& message_queue)
+    : message_queue_(message_queue)
+    , epoll_fd_(-1)
+    , socket_fd_(-1)
+    , connected_(false)
+    , running_(false) {
+}
+
+EpollNetworkModel::~EpollNetworkModel() {
+    disconnect();
+}
+
+void EpollNetworkModel::setNonBlocking(int fd) {
+    int flags = fcntl(fd, F_GETFL, 0);
+    fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+}
+
+bool EpollNetworkModel::initEpoll() {
+    // epoll_fd_ = epoll_create1(0);
+    epoll_fd_ = epoll_create1(EPOLL_CLOEXEC);
+    if (epoll_fd_ == -1) {
+        return false;
+    }
+    return true;
+}
+
+bool EpollNetworkModel::connect(const std::string& host, uint16_t port) {
+    if (connected_) {
+        return false;
+    }
+
+    socket_fd_ = socket(AF_INET, SOCK_STREAM, 0);
+    if (socket_fd_ == -1) {
+        if (error_callback_) {
+            error_callback_("Failed to create socket");
+        }
+        return false;
+    }
+
+    setNonBlocking(socket_fd_);
+
+    struct sockaddr_in server_addr;
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(port);
+    if (inet_pton(AF_INET, host.c_str(), &server_addr.sin_addr) <= 0) {
+        close(socket_fd_);
+        if (error_callback_) {
+            error_callback_("Invalid address");
+        }
+        return false;
+    }
+
+    if (::connect(socket_fd_, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
+        if (errno != EINPROGRESS) {
+            close(socket_fd_);
+            if (error_callback_) {
+                error_callback_("Connect failed");
+            }
+            return false;
+        }
+    }
+
+    if (!initEpoll()) {
+        close(socket_fd_);
+        if (error_callback_) {
+            error_callback_("Failed to init epoll");
+        }
+        return false;
+    }
+
+    struct epoll_event ev;
+    ev.events = EPOLLIN | EPOLLET;
+    // ev.events = EPOLLIN | EPOLLOUT | EPOLLET;
+    ev.data.fd = socket_fd_;
+    if (epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, socket_fd_, &ev) == -1) {
+        close(socket_fd_);
+        close(epoll_fd_);
+        if (error_callback_) {
+            error_callback_("Failed to add socket to epoll");
+        }
+        return false;
+    }
+
+    connected_ = true;
+    running_ = true;
+
+    // 启动事件循环线程
+    event_thread_ = std::make_unique<std::thread>(&EpollNetworkModel::eventLoop, this);
+    return true;
+}
+
+void EpollNetworkModel::disconnect() {
+    if (!connected_) {
+        return;
+    }
+
+    running_ = false;
+    connected_ = false;
+
+    if (event_thread_ && event_thread_->joinable()) {
+        event_thread_->join();
+    }
+
+    if (socket_fd_ != -1) {
+        close(socket_fd_);
+        socket_fd_ = -1;
+    }
+    if (epoll_fd_ != -1) {
+        close(epoll_fd_);
+        epoll_fd_ = -1;
+    }
+}
+
+void EpollNetworkModel::eventLoop() {
+    while (running_) {
+        poll();
+    }
+}
+
+void EpollNetworkModel::poll() {
+    if (!connected_) {
+        return;
+    }
+
+    struct epoll_event events[MAX_EVENTS];
+    int nfds = epoll_wait(epoll_fd_, events, MAX_EVENTS, 100);
+
+    if (nfds == -1) {
+        if (errno != EINTR) {
+            disconnect();
+        }
+        return;
+    }
+
+    for (int i = 0; i < nfds; ++i) {
+        if (events[i].events & EPOLLIN) {
+            if (!handleRead()) {
+                disconnect();
+                return;
+            }
+        }
+        if (events[i].events & EPOLLOUT) {
+            if (!handleWrite()) {
+                disconnect();
+                return;
+            }
+        }
+    }
+}
+
+bool EpollNetworkModel::handleRead() {
+    char buffer[MAX_BUFFER_SIZE];
+    while (true) {
+        ssize_t n = read(socket_fd_, buffer, MAX_BUFFER_SIZE);
+        if (n > 0) {
+            // 处理读取到的数据
+            std::cout << "Received message: " << std::string(buffer, n) << std::endl;
+            // TODO: message_queue_ push
+            // if (message_callback_) {
+            //     message_callback_(std::string(buffer, n));
+            // }
+        } else if (n == 0) {
+            return false;  // 连接关闭
+        } else {
+            if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                return true;  // 暂无数据
+            }
+            return false;  // 发生错误
+        }
+    }
+}
+
+bool EpollNetworkModel::handleWrite() {
+    std::lock_guard<std::mutex> lock(write_mutex_);
+    while (!write_queue_.empty()) {
+        const std::string& data = write_queue_.front();
+        ssize_t n = write(socket_fd_, data.c_str(), data.size());
+        if (n > 0) {
+            write_queue_.pop();
+        } else if (n == -1) {
+            if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                return true;  // 写缓冲区已满
+            }
+            return false;  // 发生错误
+        }
+    }
+
+    struct epoll_event ev;
+    ev.events = EPOLLIN | EPOLLET;
+    ev.data.fd = socket_fd_;
+    if (epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, socket_fd_, &ev) == -1) {
+        return false;
+    }
+    return true;
+}
+
+void EpollNetworkModel::setErrorCallback(ErrorCallback callback) {
+    error_callback_ = std::move(callback);
+}
+
+bool EpollNetworkModel::isConnected() const {
+    return connected_;
+}
+
+void EpollNetworkModel::sendMessage(const protocol::IMessage& message) {
+    if (!connected_) {
+        return;
+    }
+
+    // 序列化消息并加入发送队列
+    std::string serialized_message = message.serialize();
+    {
+        std::lock_guard<std::mutex> lock(write_mutex_);
+        write_queue_.push(std::move(serialized_message));
+    }
+
+    struct epoll_event ev;
+    ev.events = EPOLLIN | EPOLLOUT | EPOLLET;
+    ev.data.fd = socket_fd_;
+    if (epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, socket_fd_, &ev) == -1) {
+        close(socket_fd_);
+        close(epoll_fd_);
+        if (error_callback_) {
+            error_callback_("Failed to add socket to epoll");
+        }
+        return;
+    }
+}
+
+} // namespace network

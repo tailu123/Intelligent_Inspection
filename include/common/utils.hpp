@@ -19,4 +19,6 @@ std::vector<protocol::NavigationPoint> loadDefaultNavigationPoints(const std::st
 
 // 辅助函数：加载默认导航点
 std::vector<protocol::NavigationPoint> loadNavigationPoints();
+
+// static std::vector<protocol::NavigationPoint> global_points = loadNavigationPoints();
 } // namespace common

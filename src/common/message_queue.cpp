@@ -2,6 +2,7 @@
 
 namespace common {
 
+// TODO: 可以考虑多模型消息队列, 比如无锁队列
 void MessageQueue::push(std::unique_ptr<protocol::IMessage> msg) {
     std::lock_guard<std::mutex> lock(mutex_);
     queue_.push(std::move(msg));

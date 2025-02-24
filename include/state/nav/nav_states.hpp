@@ -7,8 +7,9 @@
 #include "state/base_state.hpp"
 #include "protocol/x30_protocol.hpp"
 #include <memory>
-#include "state/nav/nav_context.hpp"
-#include "state/nav/nav_machine.hpp"
+#include "common/message_queue.hpp"
+// #include "state/nav/nav_context.hpp"
+// #include "state/nav/nav_machine.hpp"
 
 namespace state {
 
@@ -28,8 +29,8 @@ struct Nav : BaseState<Nav> {
 struct Done : public boost::msm::front::terminate_state<> {
     template <class Event, class FSM>
     void on_entry(Event const&, FSM& fsm) {
+        // TODO: can optimize by cleanup_pending when business complexity grows
         std::cout << "[NavFsm:State:Done]: 进入完成状态" << std::endl;
-        // TODO: can optimize by cleanup_pending
         fsm.context_.message_queue.clear();
         fsm.context_.message_queue.push(std::make_unique<protocol::ProcedureReset>());
         fsm.on_terminate();

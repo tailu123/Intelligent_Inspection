@@ -3,9 +3,6 @@
 #include <ostream>
 #include <thread>
 #include <chrono>
-#include <filesystem>
-#include <optional>
-#include "protocol/x30_protocol.hpp"
 #include "common/event_bus.hpp"
 namespace x30 {
 
@@ -18,12 +15,16 @@ enum class CommandResult {
 
 class InspectionApp {
 public:
+
+    explicit InspectionApp() : system_(std::make_unique<application::X30InspectionSystem>()) {}
+    ~InspectionApp() = default;
+
     // 初始化应用程序
     bool initialize(const std::string& host, uint16_t port) {
         setupCallbacks();
-        setupEventHandlers();
+        setupEventHandlers(); // TODO: 新增业务逻辑
 
-        if (!system_.initialize(host, port)) {
+        if (!system_->initialize(host, port)) {
             std::cout << "系统初始化失败\n";
             return false;
         }
@@ -49,8 +50,6 @@ public:
                 break;
             }
         }
-
-        shutdown();
     }
 
 private:
@@ -69,13 +68,13 @@ private:
         callback.onStatusUpdate = [](const std::string& status) {
             std::cout << "状态更新: " << status << "\n";
         };
-        system_.setCallback(callback);
+        system_->setCallback(callback);
     }
 
     // 设置事件处理器
     void setupEventHandlers() {
         // 订阅导航任务响应事件
-        system_.subscribeEvent<common::MessageResponseEvent>(
+        system_->subscribeEvent<common::MessageResponseEvent>(
             [](const std::shared_ptr<common::Event>& event) {
                 auto respEvent = std::static_pointer_cast<common::MessageResponseEvent>(event);
                 std::cout << "收到响应: " << respEvent->data <<
@@ -84,7 +83,7 @@ private:
         );
 
         // 订阅连接状态事件
-        system_.subscribeEvent<common::ConnectionStatusEvent>(
+        system_->subscribeEvent<common::ConnectionStatusEvent>(
             [](const std::shared_ptr<common::Event>& event) {
                 auto connEvent = std::static_pointer_cast<common::ConnectionStatusEvent>(event);
                 std::cout << "连接状态: " <<
@@ -94,7 +93,7 @@ private:
         );
 
         // 订阅导航状态事件
-        system_.subscribeEvent<common::NavigationStatusEvent>(
+        system_->subscribeEvent<common::NavigationStatusEvent>(
             [](const std::shared_ptr<common::Event>& event) {
                 auto navEvent = std::static_pointer_cast<common::NavigationStatusEvent>(event);
                 std::cout << "导航状态: " << navEvent->status <<
@@ -104,7 +103,7 @@ private:
         );
 
         // 订阅错误事件
-        system_.subscribeEvent<common::ErrorEvent>(
+        system_->subscribeEvent<common::ErrorEvent>(
             [](const std::shared_ptr<common::Event>& event) {
                 auto errorEvent = std::static_pointer_cast<common::ErrorEvent>(event);
                 std::cout << "错误事件: [" << errorEvent->code << "] " <<
@@ -115,23 +114,15 @@ private:
 
     // 等待连接建立
     void waitForConnection() {
-        while (!system_.isConnected()) {
+        while (!system_->isConnected()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
     }
 
     // 处理用户命令
     CommandResult handleCommand(const std::string& command) {
-        if (command == "start") {
-            system_.handleCommand(std::make_unique<protocol::NavigationTaskRequest>());
-            return CommandResult::CONTINUE;
-        }
-        else if (command == "cancel") {
-            system_.handleCommand(std::make_unique<protocol::CancelTaskRequest>());
-            return CommandResult::CONTINUE;
-        }
-        else if (command == "status") {
-            system_.handleCommand(std::make_unique<protocol::QueryStatusRequest>());
+        if (command == "start" || command == "cancel" || command == "status") {
+            system_->handleCommand(command);
             return CommandResult::CONTINUE;
         }
         else if (command == "quit") {
@@ -147,12 +138,6 @@ private:
         }
     }
 
-    // 关闭应用程序
-    void shutdown() {
-        system_.shutdown();
-        std::cout << "系统已关闭\n";
-    }
-
     // 打印帮助信息
     static void printHelp() {
         std::cout << "可用命令：\n"
@@ -164,7 +149,7 @@ private:
     }
 
 private:
-    application::X30InspectionSystem system_;
+    std::unique_ptr<application::X30InspectionSystem> system_;
 };
 
 } // namespace x30
@@ -175,48 +160,6 @@ int main(int argc, char* argv[]) {
             std::cout << "用法: " << argv[0] << " <host> <port>\n";
             return 1;
         }
-
-/*
-<?xml version="1.0" encoding="UTF-8"?>
-<PatrolDevice>
-    <Type>1003</Type>
-    <Command>1</Command>
-    <Time>2025-02-21 10:13:15</Time>
-    <Items>
-        <Value>2</Value>
-        <ErrorCode>0</ErrorCode>
-        <ErrorStatus>8960</ErrorStatus>
-    </Items>
-</PatrolDevice>
-*/
-        // new string according to above
-        // std::string xml =
-// R"(<?xml version="1.0" encoding="UTF-8"?>
-//         <PatrolDevice>
-//             <Type>1003</Type>
-//             <Command>1</Command>
-//             <Time>2025-02-21 10:13:15</Time>
-//             <Items>
-//                 <Value>2</Value>
-//                 <ErrorCode>0</ErrorCode>
-//                 <ErrorStatus>8960</ErrorStatus>
-//             </Items>
-//         </PatrolDevice>)";
-// R"(<?xml version="1.0" encoding="UTF-8"?>
-// <PatrolDevice>
-//     <Type>1003</Type>
-//     <Command>1</Command>
-//     <Time>2025-02-21 10:48:55</Time>
-//     <Items>
-//         <Value>1</Value>
-//         <ErrorCode>2</ErrorCode>
-//         <ErrorStatus>8962</ErrorStatus>
-//     </Items>
-// </PatrolDevice>)";
-//         x30::protocol::NavigationTaskResponse msg;
-//         msg.deserialize(xml);
-//         std::cout << msg.timestamp << msg.value << msg.errorStatus << std::endl;
-
 
         x30::InspectionApp app;
         std::string host = argv[1];

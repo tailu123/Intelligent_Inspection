@@ -49,15 +49,16 @@ struct NavigationMachine_ : public boost::msm::front::state_machine_def<Navigati
 
     // 转换表
     struct transition_table : boost::mpl::vector<
-    boost::msm::front::Row<Init, NavigationTaskRequest, PrepareEnterNav, send_nav_request, boost::msm::front::none>,
-    boost::msm::front::Row<PrepareEnterNav, CancelTaskRequest, PrepareEnterNav, send_cancel_request, boost::msm::front::none>,
-    boost::msm::front::Row<PrepareEnterNav, QueryStatusRequest, PrepareEnterNav, send_query_request, boost::msm::front::none>,
+    boost::msm::front::Row<Init, boost::msm::front::none, PrepareEnterNav, send_nav_request, boost::msm::front::none>,
+    // boost::msm::front::Row<Init, NavigationTaskRequest, PrepareEnterNav, send_nav_request, boost::msm::front::none>,
+    // boost::msm::front::Row<PrepareEnterNav, CancelTaskRequest, PrepareEnterNav, send_cancel_request, boost::msm::front::none>,
+    // boost::msm::front::Row<PrepareEnterNav, QueryStatusRequest, PrepareEnterNav, send_query_request, boost::msm::front::none>,
     boost::msm::front::Row<PrepareEnterNav, NavigationTaskResponse, Done, boost::msm::front::none, boost::msm::front::none>,
     boost::msm::front::Row<PrepareEnterNav, CancelTaskResponse, Done, boost::msm::front::none, check_resp2004_guard>,
     boost::msm::front::Row<PrepareEnterNav, QueryStatusResponse, Done, boost::msm::front::none, check_resp_status_completed_guard>,
     boost::msm::front::Row<PrepareEnterNav, QueryStatusResponse, Nav, boost::msm::front::none, check_resp_status_executing_guard>,
-    boost::msm::front::Row<Nav, CancelTaskRequest, Nav, send_cancel_request, boost::msm::front::none>,
-    boost::msm::front::Row<Nav, QueryStatusRequest, Nav, send_query_request, boost::msm::front::none>,
+    // boost::msm::front::Row<Nav, CancelTaskRequest, Nav, send_cancel_request, boost::msm::front::none>,
+    // boost::msm::front::Row<Nav, QueryStatusRequest, Nav, send_query_request, boost::msm::front::none>,
     boost::msm::front::Row<Nav, CancelTaskResponse, Done, boost::msm::front::none, check_resp2004_guard>,
     boost::msm::front::Row<Nav, NavigationTaskResponse, Done, boost::msm::front::none, boost::msm::front::none>,
     boost::msm::front::Row<Nav, QueryStatusResponse, Done, boost::msm::front::none, check_resp_status_completed_guard>
@@ -70,10 +71,12 @@ struct NavigationMachine_ : public boost::msm::front::state_machine_def<Navigati
     }
 
     // context引用
-    NavigationMachine_(NavigationContext& context)
-    : context_(context) {}
+    // NavigationMachine_(NavigationContext& context)
+    // : context_(context) {}
+    NavigationMachine_(NavigationContext context)
+        : context_(std::move(context)) { }
 
-    NavigationContext& context_;
+    NavigationContext context_;
 };
 
 // 后端状态机定义
