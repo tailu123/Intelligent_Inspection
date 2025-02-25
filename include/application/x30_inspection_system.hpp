@@ -40,15 +40,15 @@ public:
     // 处理用户输入的指令
     void handleCommand(const std::string& command);
 
-    // 事件总线相关方法
-    template<typename T>
-    std::string subscribeEvent(std::function<void(const std::shared_ptr<common::Event>&)> handler) {
-        return common::EventBus::getInstance().subscribe<T>(handler);
-    }
+    // // 事件总线相关方法
+    // template<typename T>
+    // std::string subscribeEvent(std::function<void(const std::shared_ptr<common::Event>&)> handler) {
+    //     return common::EventBus::getInstance().subscribe<T>(handler);
+    // }
 
-    void unsubscribeEvent(const std::string& eventType, const std::string& handlerId) {
-        common::EventBus::getInstance().unsubscribe(eventType, handlerId);
-    }
+    // void unsubscribeEvent(const std::string& eventType, const std::string& handlerId) {
+    //     common::EventBus::getInstance().unsubscribe(eventType, handlerId);
+    // }
 
 private:
     // 事件发布方法
@@ -64,8 +64,11 @@ private:
     bool cancelInspection();
     bool queryStatus();
 
+    // 重置 nav_state_procedure_
+    void resetNavProcedure();
+
     // 错误回调，目前即打印
-    void handleError(const std::string& error);
+    void handleError(const std::string& error) const;
 
     // 消息处理循环
     void messageProcessingLoop();
@@ -81,16 +84,6 @@ private:
 
     // 业务核心
     std::unique_ptr<procedure::NavigationProcedure> nav_state_procedure_;
-
-    // 定时1007状态查询相关
-    std::atomic<bool> status_query_running_{false};
-    std::thread status_query_thread_;
-    void statusQueryLoop();
-    void startStatusQuery();
-    void stopStatusQuery();
-
-    // 状态查询间隔(毫秒)
-    static constexpr int STATUS_QUERY_INTERVAL_MS = 1000;
 
     // 消息队列
     common::MessageQueue message_queue_;

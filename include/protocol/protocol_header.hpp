@@ -14,13 +14,12 @@ struct ProtocolHeader {
     uint16_t message_id;
     std::array<uint8_t, 8> reserved;
 
-    ProtocolHeader();
+    // ProtocolHeader作为数据类的话，适合定义构造函数吗？
+    explicit ProtocolHeader();
     explicit ProtocolHeader(uint16_t length);
 
     bool validateSyncBytes() const;
     uint16_t getBodySize() const;
-
-    // static constexpr size_t SIZE = 16;  // 头部固定16字节
 };
 #pragma pack(pop)
 

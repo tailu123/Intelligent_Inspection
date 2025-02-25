@@ -18,7 +18,7 @@ enum class NetworkModelType {
 
 class NetworkModelFactory {
 public:
-    static std::unique_ptr<BaseNetworkModel> createNetworkModel(
+    static std::shared_ptr<BaseNetworkModel> createNetworkModel(
         NetworkModelType type,
         common::MessageQueue& message_queue);
 };

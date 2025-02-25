@@ -11,14 +11,14 @@ namespace network {
 
 
 // 异步通信管理器
-// 换个名字，叫：NetworkModelManager
+// 换个名字，叫： NetworkModelManager
 class NetworkModelManager {
 public:
     explicit NetworkModelManager(network::NetworkModelType model_type, common::MessageQueue& message_queue);
     ~NetworkModelManager();
 
     // 启动和停止
-    void start();
+    bool start(const std::string& host, uint16_t port);
     void stop();
 
     // 获取网络模型实例

@@ -11,6 +11,22 @@ void send_nav_request::execute(state::NavigationContext& context)
     protocol::NavigationTaskRequest req;
     req.points = points;
     req.timestamp = common::getCurrentTimestamp();
-    context.communication->sendMessage(req);
+    context.network_model->sendMessage(req);
 }
+
+void send_get_real_time_status_request::execute(state::NavigationContext& context)
+{
+    // std::cout << "[NavFsm:Action]: 发送1002请求--获取实时状态" << std::endl;
+    protocol::GetRealTimeStatusRequest req;
+    req.timestamp = common::getCurrentTimestamp();
+    context.network_model->sendMessage(req);
+}
+
+// void send_query_status_request::execute(state::NavigationContext& context)
+// {
+//     std::cout << "[NavFsm:Action]: 发送1007请求--查询状态" << std::endl;
+//     protocol::QueryStatusRequest req;
+//     req.timestamp = common::getCurrentTimestamp();
+//     context.network_model->sendMessage(req);
+// }
 } // namespace state

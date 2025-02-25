@@ -11,6 +11,9 @@
 #include <algorithm>
 #include <vector>
 #include "common/message_queue.hpp"
+#include "common/event_bus.hpp"
+#include <fmt/core.h>
+
 namespace network {
 
 EpollNetworkModel::EpollNetworkModel(common::MessageQueue& message_queue)
@@ -46,9 +49,7 @@ bool EpollNetworkModel::connect(const std::string& host, uint16_t port) {
 
     socket_fd_ = socket(AF_INET, SOCK_STREAM, 0);
     if (socket_fd_ == -1) {
-        if (error_callback_) {
-            error_callback_("Failed to create socket");
-        }
+        handleError(fmt::format("Failed to create socket"));
         return false;
     }
 
@@ -60,27 +61,21 @@ bool EpollNetworkModel::connect(const std::string& host, uint16_t port) {
     server_addr.sin_port = htons(port);
     if (inet_pton(AF_INET, host.c_str(), &server_addr.sin_addr) <= 0) {
         close(socket_fd_);
-        if (error_callback_) {
-            error_callback_("Invalid address");
-        }
+        handleError(fmt::format("Invalid address"));
         return false;
     }
 
     if (::connect(socket_fd_, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
         if (errno != EINPROGRESS) {
             close(socket_fd_);
-            if (error_callback_) {
-                error_callback_("Connect failed");
-            }
+            handleError(fmt::format("Connect failed"));
             return false;
         }
     }
 
     if (!initEpoll()) {
         close(socket_fd_);
-        if (error_callback_) {
-            error_callback_("Failed to init epoll");
-        }
+        handleError(fmt::format("Failed to init epoll"));
         return false;
     }
 
@@ -90,9 +85,7 @@ bool EpollNetworkModel::connect(const std::string& host, uint16_t port) {
     if (epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, socket_fd_, &ev) == -1) {
         close(socket_fd_);
         close(epoll_fd_);
-        if (error_callback_) {
-            error_callback_("Failed to add socket to epoll");
-        }
+        handleError(fmt::format("Failed to add socket to epoll"));
         return false;
     }
 
@@ -183,7 +176,7 @@ bool EpollNetworkModel::handleRead() {
                         ssize_t bytes_read_now = read(socket_fd_, buffer.data() + bytes_read, bytes_to_read);
                         if (bytes_read_now > 0) {
                             bytes_read += bytes_read_now;
-                            std::cout << "Read " << bytes_read_now << " bytes" << std::endl;
+                            // std::cout << "Read " << bytes_read_now << " bytes" << std::endl;
                         } else if (bytes_read_now == 0) {
                             return false;  // 连接关闭
                         } else if (errno != EAGAIN && errno != EWOULDBLOCK) {
@@ -236,9 +229,9 @@ bool EpollNetworkModel::handleWrite() {
     return true;
 }
 
-void EpollNetworkModel::setErrorCallback(ErrorCallback callback) {
-    error_callback_ = std::move(callback);
-}
+// void EpollNetworkModel::setErrorCallback(ErrorCallback callback) {
+//     error_callback_ = std::move(callback);
+// }
 
 bool EpollNetworkModel::isConnected() const {
     return connected_;
@@ -262,11 +255,15 @@ void EpollNetworkModel::sendMessage(const protocol::IMessage& message) {
     if (epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, socket_fd_, &ev) == -1) {
         close(socket_fd_);
         close(epoll_fd_);
-        if (error_callback_) {
-            error_callback_("Failed to add socket to epoll");
-        }
+        handleError(fmt::format("Failed to add socket to epoll"));
         return;
     }
+}
+
+void EpollNetworkModel::handleError(std::string_view error_msg) {
+    auto error_event = std::make_shared<common::NetworkErrorEvent>();
+    error_event->message = std::string{error_msg};
+    common::EventBus::getInstance().publish(error_event);
 }
 
 } // namespace network

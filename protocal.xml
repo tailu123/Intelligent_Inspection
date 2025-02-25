@@ -117,3 +117,47 @@ Response:
  <ErrorCode>0</ErrorCode> <!-- 成功=0，失败=1 -->
 </Items>
 </PatrolDevice>
+
+1002 获取实时基础状态协议交互：
+Request:
+<PatrolDevice>
+	<Type>1002</Type>
+	<Command>1</Command>
+	<Time>2025-02-11 20:17:12</Time>
+	<Items/>
+</PatrolDevice>
+Response:
+<?xml version="1.0" encoding="UTF-8"?>
+<PatrolDevice>
+  <Type>1002</Type>
+  <Command>1</Command>
+  <Time>2025-02-11 20:18:16</Time>
+  <Items>
+    <MotionState>4</MotionState>
+    <PosX>-4.2345729</PosX>
+    <PosY>3.4698088</PosY>
+    <PosZ>-0.037342086</PosZ>
+    <AngleYaw>-3.0440888</AngleYaw>
+    <Roll>-0.00023393621</Roll>
+    <Pitch>-0.015615869</Pitch>
+    <Yaw>-3.0440888</Yaw>
+    <Speed>0.00991189</Speed>
+    <CurOdom>0.17879000</CurOdom>
+    <SumOdom>26.45731926</SumOdom>
+    <CurRuntime>4805</CurRuntime>
+    <SumRuntime>2962899</SumRuntime>
+    <Res>0.1</Res>
+    <X0>-4.5</X0>
+    <Y0>-19.9</Y0>
+    <H>303</H>
+    <Electricity>61</Electricity>
+    <Location>0</Location>
+    <RTKState>0</RTKState>
+    <OnDockState>0</OnDockState>
+    <GaitState>0</GaitState>
+    <MotorState>0</MotorState>
+    <ChargeState>0</ChargeState>
+    <ControlMode>0</ControlMode>
+    <MapUpdateState>0</MapUpdateState>
+  </Items>
+</PatrolDevice>

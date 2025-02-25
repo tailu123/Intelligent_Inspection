@@ -28,6 +28,35 @@ std::string IMessage::serialize() const {
 
 // =============== 请求消息实现 ===============
 
+// GetRealTimeStatusRequest实现
+std::string GetRealTimeStatusRequest::serializeToXml() const {
+    std::stringstream xml;
+    xml << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+    xml << "<PatrolDevice>\n";
+    xml << "<Type>" << static_cast<int>(MessageType::GET_REAL_TIME_STATUS_REQ) << "</Type>\n";
+    xml << "<Command>1</Command>\n";
+    xml << "<Time>" << timestamp << "</Time>\n";
+    xml << "<Items/>\n";
+    xml << "</PatrolDevice>";
+    return xml.str();
+}
+
+bool GetRealTimeStatusRequest::deserialize(const std::string& xml) {
+    rapidxml::xml_document<> doc;
+    try {
+        doc.parse<rapidxml::parse_non_destructive>(const_cast<char*>(xml.c_str()));
+        auto root = doc.first_node("PatrolDevice");
+        if (!root) return false;
+
+        auto timeNode = root->first_node("Time");
+        if (timeNode) timestamp = timeNode->value();
+
+        return true;
+    } catch (const rapidxml::parse_error& e) {
+        return false;
+    }
+}
+
 // NavigationTaskRequest实现
 std::string NavigationTaskRequest::serializeToXml() const {
     std::stringstream xml;
@@ -167,6 +196,91 @@ bool QueryStatusRequest::deserialize(const std::string& xml) {
 }
 
 // =============== 响应消息实现 ===============
+
+// GetRealTimeStatusResponse实现
+std::string GetRealTimeStatusResponse::serializeToXml() const {
+    std::stringstream xml;
+    xml << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+    xml << "<PatrolDevice>\n";
+    xml << "<Type>" << static_cast<int>(MessageType::GET_REAL_TIME_STATUS_RESP) << "</Type>\n";
+    xml << "<Command>1</Command>\n";
+    xml << "<Time>" << timestamp << "</Time>\n";
+    xml << "<Items>\n";
+    xml << "  <MotionState>" << motionState << "</MotionState>\n";
+    xml << "  <PosX>" << posX << "</PosX>\n";
+    xml << "  <PosY>" << posY << "</PosY>\n";
+    xml << "  <PosZ>" << posZ << "</PosZ>\n";
+    xml << "  <AngleYaw>" << angleYaw << "</AngleYaw>\n";
+    xml << "  <Speed>" << speed << "</Speed>\n";
+    xml << "  <CurOdom>" << curOdom << "</CurOdom>\n";
+    xml << "  <SumOdom>" << sumOdom << "</SumOdom>\n";
+    xml << "  <CurRuntime>" << curRuntime << "</CurRuntime>\n";
+    xml << "  <SumRuntime>" << sumRuntime << "</SumRuntime>\n";
+    xml << "  <Res>" << res << "</Res>\n";
+    xml << "  <X0>" << x0 << "</X0>\n";
+    xml << "  <Y0>" << y0 << "</Y0>\n";
+    xml << "  <H>" << h << "</H>\n";
+    xml << "  <Electricity>" << electricity << "</Electricity>\n";
+    xml << "  <Location>" << location << "</Location>\n";
+    xml << "  <RTKState>" << RTKState << "</RTKState>\n";
+    xml << "  <OnDockState>" << onDockState << "</OnDockState>\n";
+    xml << "  <GaitState>" << gaitState << "</GaitState>\n";
+    xml << "  <MotorState>" << motorState << "</MotorState>\n";
+    xml << "</Items>\n";
+    xml << "</PatrolDevice>";
+    return xml.str();
+}
+
+bool GetRealTimeStatusResponse::deserialize(const std::string& xml) {
+    rapidxml::xml_document<> doc;
+    try {
+        doc.parse<rapidxml::parse_non_destructive>(const_cast<char*>(xml.c_str()));
+        auto root = doc.first_node("PatrolDevice");
+        if (!root) return false;
+
+        auto timeNode = root->first_node("Time");
+        if (timeNode) timestamp = timeNode->value();
+
+        auto itemsNode = root->first_node("Items");
+        if (!itemsNode) return false;
+
+        auto getValue = [](rapidxml::xml_node<>* parent, const char* name) -> std::string {
+            auto node = parent->first_node(name);
+            return node ? node->value() : "";
+        };  
+        
+        motionState = std::stoi(getValue(itemsNode, "MotionState"));
+        posX = std::stod(getValue(itemsNode, "PosX"));
+        posY = std::stod(getValue(itemsNode, "PosY"));
+        posZ = std::stod(getValue(itemsNode, "PosZ"));
+        angleYaw = std::stod(getValue(itemsNode, "AngleYaw"));
+        roll = std::stod(getValue(itemsNode, "Roll"));
+        pitch = std::stod(getValue(itemsNode, "Pitch"));
+        yaw = std::stod(getValue(itemsNode, "Yaw"));
+        speed = std::stod(getValue(itemsNode, "Speed"));
+        curOdom = std::stod(getValue(itemsNode, "CurOdom"));
+        sumOdom = std::stod(getValue(itemsNode, "SumOdom"));
+        curRuntime = std::stoull(getValue(itemsNode, "CurRuntime"));
+        sumRuntime = std::stoull(getValue(itemsNode, "SumRuntime"));
+        res = std::stod(getValue(itemsNode, "Res"));
+        x0 = std::stod(getValue(itemsNode, "X0"));
+        y0 = std::stod(getValue(itemsNode, "Y0"));
+        h = std::stoi(getValue(itemsNode, "H"));
+        electricity = std::stoi(getValue(itemsNode, "Electricity"));
+        location = std::stoi(getValue(itemsNode, "Location"));
+        RTKState = std::stoi(getValue(itemsNode, "RTKState"));
+        onDockState = std::stoi(getValue(itemsNode, "OnDockState"));
+        gaitState = std::stoi(getValue(itemsNode, "GaitState"));
+        motorState = std::stoi(getValue(itemsNode, "MotorState"));
+        chargeState = std::stoi(getValue(itemsNode, "ChargeState"));
+        controlMode = std::stoi(getValue(itemsNode, "ControlMode"));
+        mapUpdateState = std::stoi(getValue(itemsNode, "MapUpdateState"));
+
+        return true;    
+    } catch (const rapidxml::parse_error& e) {
+        return false;
+    }
+}
 
 // NavigationTaskResponse实现
 std::string NavigationTaskResponse::serializeToXml() const {
@@ -325,8 +439,13 @@ std::unique_ptr<IMessage> MessageFactory::createResponseMessage(MessageType type
             return std::make_unique<CancelTaskResponse>();
         case MessageType::QUERY_STATUS_RESP:
             return std::make_unique<QueryStatusResponse>();
+        case MessageType::GET_REAL_TIME_STATUS_RESP:
+            return std::make_unique<GetRealTimeStatusResponse>();
         default:
+        {
+            std::cout << "error type " << std::endl;
             return nullptr;
+        }
     }
 }
 
@@ -348,6 +467,31 @@ std::unique_ptr<IMessage> MessageFactory::parseMessage(const std::string& xml) {
         std::cerr << "Failed to parse message: " << e.what() << std::endl;
     }
     return nullptr;
+}
+
+// 打印NavigationStatus
+std::ostream& operator<<(std::ostream& os, const NavigationStatus& status) {
+    switch (status) {
+        case NavigationStatus::COMPLETED:
+            os << "COMPLETED";
+            break;
+        case NavigationStatus::EXECUTING:
+            os << "EXECUTING";
+            break;
+        case NavigationStatus::FAILED:
+            os << "FAILED";
+            break;
+        default:
+            os << "UNKNOWN";
+            break;
+    }
+    return os;
+}
+
+// 打印NavigationPoint
+std::ostream& operator<<(std::ostream& os, const NavigationPoint& point) {
+    os << "NavigationPoint: " << point.mapId << ", " << point.value << ", " << point.posX << ", " << point.posY << ", " << point.posZ << ", " << point.angleYaw << ", " << point.pointInfo << ", " << point.gait << ", " << point.speed << ", " << point.manner << ", " << point.obsMode << ", " << point.navMode << ", " << point.terrain << ", " << point.posture;
+    return os;
 }
 
 } // namespace protocol

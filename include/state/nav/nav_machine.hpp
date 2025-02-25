@@ -25,7 +25,7 @@ using protocol::QueryStatusRequest;
 using protocol::NavigationTaskResponse;
 using protocol::CancelTaskResponse;
 using protocol::QueryStatusResponse;
-
+using protocol::GetRealTimeStatusResponse;
 // 状态机定义
 struct NavigationMachine_ : public boost::msm::front::state_machine_def<NavigationMachine_> {
 
@@ -57,10 +57,13 @@ struct NavigationMachine_ : public boost::msm::front::state_machine_def<Navigati
     boost::msm::front::Row<PrepareEnterNav, CancelTaskResponse, Done, boost::msm::front::none, check_resp2004_guard>,
     boost::msm::front::Row<PrepareEnterNav, QueryStatusResponse, Done, boost::msm::front::none, check_resp_status_completed_guard>,
     boost::msm::front::Row<PrepareEnterNav, QueryStatusResponse, Nav, boost::msm::front::none, check_resp_status_executing_guard>,
+    // TODO: PrepareEnterNav 超时呢？
     // boost::msm::front::Row<Nav, CancelTaskRequest, Nav, send_cancel_request, boost::msm::front::none>,
     // boost::msm::front::Row<Nav, QueryStatusRequest, Nav, send_query_request, boost::msm::front::none>,
     boost::msm::front::Row<Nav, CancelTaskResponse, Done, boost::msm::front::none, check_resp2004_guard>,
     boost::msm::front::Row<Nav, NavigationTaskResponse, Done, boost::msm::front::none, boost::msm::front::none>,
+    // boost::msm::front::Row<Nav, GetRealTimeStatusRequest, Nav, send_query_status_request, boost::msm::front::none>,
+    boost::msm::front::Row<Nav, QueryStatusResponse, Nav, send_get_real_time_status_request, check_resp_status_executing_guard>,
     boost::msm::front::Row<Nav, QueryStatusResponse, Done, boost::msm::front::none, check_resp_status_completed_guard>
     > {};
 

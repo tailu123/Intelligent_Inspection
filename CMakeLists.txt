@@ -49,6 +49,7 @@ add_executable(${PROJECT_NAME}
     src/network/x30_communication.cpp
     src/network/asio_network_model.cpp
     src/network/epoll_network_model.cpp
+    src/network/network_model_factory.cpp
     # src/network/libhv_network_model.cpp
     src/protocol/x30_protocol.cpp
     src/protocol/protocol_header.cpp

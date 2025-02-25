@@ -15,14 +15,16 @@ enum class MessageType {
     PROCEDURE_RESET = 0,
 
     // 请求消息类型
+    GET_REAL_TIME_STATUS_REQ = 1002,
     NAVIGATION_TASK_REQ = 1003,
     CANCEL_TASK_REQ = 1004,
     QUERY_STATUS_REQ = 1007,
 
     // 响应消息类型
+    GET_REAL_TIME_STATUS_RESP = 2002,
     NAVIGATION_TASK_RESP = 2003,
     CANCEL_TASK_RESP = 2004,
-    QUERY_STATUS_RESP = 2007
+    QUERY_STATUS_RESP = 2007,
 };
 
 // 错误码枚举
@@ -38,6 +40,9 @@ enum class NavigationStatus {
     EXECUTING = 1,      // 正在执行
     FAILED = -1        // 无法执行
 };
+
+// 打印NavigationStatus
+std::ostream& operator<<(std::ostream& os, const NavigationStatus& status);
 
 // 导航点信息
 struct NavigationPoint {
@@ -77,6 +82,9 @@ struct NavigationPoint {
     }
 };
 
+// 打印NavigationPoint
+std::ostream& operator<<(std::ostream& os, const NavigationPoint& point);
+
 // 基础消息接口
 class IMessage {
 public:
@@ -93,6 +101,18 @@ protected:
 // =============== 请求消息定义 ===============
 
 // 导航任务请求消息
+
+// 获取实时基础状态请求消息
+class GetRealTimeStatusRequest : public IMessage {
+public:
+    MessageType getType() const override { return MessageType::GET_REAL_TIME_STATUS_REQ; }
+    std::string serializeToXml() const override;
+    bool deserialize(const std::string& xml) override;
+
+    // TODO: 内部构造timestamp
+    std::string timestamp;
+};
+
 class NavigationTaskRequest : public IMessage {
 public:
     MessageType getType() const override { return MessageType::NAVIGATION_TASK_REQ; }
@@ -124,6 +144,43 @@ public:
 };
 
 // =============== 响应消息定义 ===============
+
+// 获取实时基础状态响应消息
+class GetRealTimeStatusResponse : public IMessage {
+public:
+    MessageType getType() const override { return MessageType::GET_REAL_TIME_STATUS_RESP; }
+    std::string serializeToXml() const override;
+    bool deserialize(const std::string& xml) override;
+
+    int motionState;           // 运动状态
+    double posX;               // 位置X
+    double posY;               // 位置Y
+    double posZ;               // 位置Z
+    double angleYaw;           // 角度Yaw
+    double roll;               // 角度Roll
+    double pitch;              // 角度Pitch
+    double yaw;                // 角度Yaw
+    double speed;              // 速度
+    double curOdom;            // 当前里程
+    double sumOdom;            // 累计里程
+    unsigned long long curRuntime;         // 当前运行时间
+    unsigned long long sumRuntime;         // 累计运行时间
+    double res;                // 响应时间
+    double x0;                 // 坐标X0
+    double y0;                 // 坐标Y0
+    int h;                  // 高度
+    int electricity;        // 电量
+    int location;           // 位置  定位正常=0, 定位丢失=1
+    int RTKState;           // RTK状态
+    int onDockState;        // 上岸状态
+    int gaitState;          // 步态状态
+    int motorState;         // 电机状态
+    int chargeState;        // 充电状态
+    int controlMode;        // 控制模式
+    int mapUpdateState;      // 地图更新状态
+
+    std::string timestamp;
+};
 
 // 导航任务响应消息
 class NavigationTaskResponse : public IMessage {

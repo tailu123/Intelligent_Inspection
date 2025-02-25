@@ -6,6 +6,9 @@
 
 namespace common {
 
+// 消息队列目的
+// 1. 解耦：消息发送者和消息处理器解耦
+// 2. 线程安全：使用互斥锁和条件变量保证线程安全
 class MessageQueue {
 public:
     MessageQueue() = default;

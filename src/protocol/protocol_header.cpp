@@ -36,7 +36,15 @@ uint16_t generateMessageId() {
 namespace protocol {
 
 
-ProtocolHeader::ProtocolHeader() : ProtocolHeader(0) {}
+ProtocolHeader::ProtocolHeader()
+    : sync_byte1(HEADER_1)
+    , sync_byte2(HEADER_2)
+    , sync_byte3(HEADER_3)
+    , sync_byte4(HEADER_4)
+    , length(0)
+    , message_id(0) {
+    reserved.fill(RESERVED_VALUE);
+}
 
 ProtocolHeader::ProtocolHeader(uint16_t length)
     : sync_byte1(HEADER_1)

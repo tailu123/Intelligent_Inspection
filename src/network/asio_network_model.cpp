@@ -1,28 +1,41 @@
 #include "network/asio_network_model.hpp"
 #include <fmt/core.h>
 #include "common/message_queue.hpp"
+#include "common/event_bus.hpp"
+#include <iostream>
 
 namespace network {
-    AsioNetworkModel::AsioNetworkModel(common::MessageQueue& message_queue)
-    : io_context_(std::make_unique<boost::asio::io_context>())
-    , work_(std::make_unique<boost::asio::io_context::work>(*io_context_))
+AsioNetworkModel::AsioNetworkModel(common::MessageQueue& message_queue)
+    : asio_context_(std::make_unique<AsioContext>())
+    , socket_(asio_context_->get_io_context())
+    , strand_(asio_context_->get_io_context().get_executor())
     , message_queue_(message_queue)
-    , socket_(*io_context_)
-    , strand_(io_context_->get_executor())
 {
-    // IO线程会在构造时启动
-    io_thread_ = std::thread([this]() {
-        io_context_->run();
-    });
 }
+
+//     AsioNetworkModel::AsioNetworkModel(common::MessageQueue& message_queue)
+//     : io_context_(std::make_unique<boost::asio::io_context>())
+//     , work_(std::make_unique<boost::asio::io_context::work>(*io_context_))
+//     , message_queue_(message_queue)
+//     , socket_(*io_context_)
+//     , strand_(io_context_->get_executor())
+// {
+//     // IO线程会在构造时启动
+//     io_thread_ = std::thread([this]() {
+//         io_context_->run();
+//     });
+// }
 
 AsioNetworkModel::~AsioNetworkModel() {
     disconnect();
 }
 
 bool AsioNetworkModel::connect(const std::string& host, uint16_t port) {
-    boost::asio::ip::tcp::resolver resolver(*io_context_);
+    std::cout << "AsioNetworkModel::connect" << std::endl;
+    boost::asio::ip::tcp::resolver resolver(asio_context_->get_io_context());
+    std::cout << "AsioNetworkModel::connect 2" << std::endl;
     auto endpoints = resolver.resolve(host, std::to_string(port));
+    std::cout << "AsioNetworkModel::connect 3" << std::endl;
     return doConnect(*endpoints.begin());
 }
 
@@ -31,13 +44,14 @@ void AsioNetworkModel::disconnect() {
         boost::system::error_code ec;
         socket_.close(ec);
     }
-    if (io_context_) {
-        work_.reset();
-        io_context_->stop();
-        if (io_thread_.joinable()) {
-            io_thread_.join();
-        }
-    }
+    asio_context_.reset();
+    // if (io_context_) {
+    //     work_.reset();
+    //     io_context_->stop();
+    //     if (io_thread_.joinable()) {
+    //         io_thread_.join();
+    //     }
+    // }
 }
 
 bool AsioNetworkModel::isConnected() const {
@@ -46,7 +60,8 @@ bool AsioNetworkModel::isConnected() const {
 
 void AsioNetworkModel::sendMessage(const protocol::IMessage& message) {
     auto self = shared_from_this();
-
+    // auto msg1 = message.serialize();
+    // std::cout << msg1 << std::endl;
     boost::asio::post(strand_, [this, self, msg = message.serialize()]() {
         std::lock_guard<std::mutex> lock(write_queue_mutex_);
         bool write_in_progress = !write_queue_.empty();
@@ -57,22 +72,20 @@ void AsioNetworkModel::sendMessage(const protocol::IMessage& message) {
     });
 }
 
-void AsioNetworkModel::setErrorCallback(ErrorCallback callback) {
-    error_callback_ = std::move(callback);
-}
-
 bool AsioNetworkModel::doConnect(const boost::asio::ip::tcp::endpoint& endpoint) {
+    std::cout << "AsioNetworkModel::doConnect" << std::endl;
     auto self = shared_from_this();
+    std::cout << "AsioNetworkModel::doConnect 2" << std::endl;
     socket_.async_connect(endpoint,
         boost::asio::bind_executor(strand_,
             [this, self](const boost::system::error_code& error) {
                 if (!error) {
                     doRead();
-                } else if (error_callback_) {
-                    error_callback_("连接失败: " + error.message());
+                } else {
+                    handleError(fmt::format("连接失败: {}", error.message()));
                 }
             }));
-
+    std::cout << "AsioNetworkModel::doConnect 3" << std::endl;
     return true;
 }
 
@@ -80,6 +93,7 @@ void AsioNetworkModel::doRead() {
     auto self = shared_from_this();
 
     // memset(&current_header_, 0, sizeof(protocol::ProtocolHeader));
+    current_header_ = protocol::ProtocolHeader();
     // 1.读取固定长度的协议头
     boost::asio::async_read(socket_,
         boost::asio::buffer(&current_header_, sizeof(protocol::ProtocolHeader)),
@@ -116,9 +130,9 @@ void AsioNetworkModel::doRead() {
 }
 
 void AsioNetworkModel::handleError(std::string_view error_msg) {
-    if (error_callback_) {
-        error_callback_(std::string{error_msg});
-    }
+    auto error_event = std::make_shared<common::NetworkErrorEvent>();
+    error_event->message = std::string{error_msg};
+    common::EventBus::getInstance().publish(error_event);
     disconnect();
 }
 
@@ -157,9 +171,7 @@ void AsioNetworkModel::handleWrite(const boost::system::error_code& error) {
         write_queue_.pop();
         doWrite();
     } else {
-        if (error_callback_) {
-            error_callback_("写入错误: " + error.message());
-        }
+        handleError(fmt::format("写入错误: {}", error.message()));
         disconnect();
     }
 }

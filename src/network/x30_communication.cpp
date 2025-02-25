@@ -2,8 +2,10 @@
 #include <memory>
 #include "network/asio_network_model.hpp"
 #include "network/base_network_model.hpp"
-#include "network/epoll_network_model.hpp"
-#include "network/libhv_network_model.hpp"
+// #include "network/epoll_network_model.hpp"
+// #include "network/libhv_network_model.hpp"
+// #include "common/event_bus.hpp"
+#include <iostream>
 namespace network {
 
 
@@ -23,30 +25,19 @@ NetworkModelManager::~NetworkModelManager() {
     stop();
 }
 
-void NetworkModelManager::start() {
-    if (!network_model_) {
-        // network_model_ = std::make_shared<AsioNetworkModel>(*io_context_, message_queue_);
-        network_model_ = std::make_shared<EpollNetworkModel>(message_queue_);
-        // network_model_ = std::make_shared<LibhvNetworkModel>(message_queue_);
-        // TODO: 增加多模型支持，如：EpollNetworkModel, libhvNetworkModel, factory pattern
+bool NetworkModelManager::start(const std::string& host, uint16_t port) {
+    try {
+        network_model_ = network::NetworkModelFactory::createNetworkModel(
+            model_type_,
+            message_queue_
+        );
+        std::cout << "NetworkModelManager::start" << std::endl;
+        
+        return network_model_->connect(host, port);
+    } catch (const std::exception& e) {
+        std::cout << "[NetworkModelManager]: 启动失败, 错误: " << e.what() << std::endl;
+        return false;
     }
-
-    // try {
-    //     network_model_ = network::NetworkModelFactory::createNetworkModel(
-    //         model_type_,
-    //         message_queue_
-    //     );
-
-    //     network_model_->setErrorCallback([this](const std::string& error) {
-    //         // 处理错误...
-    //     });
-
-    //     return network_model_->connect(host, port);
-    // } catch (const std::exception& e) {
-    //     // 处理异常...
-    //     return false;
-    // }
-
 }
 
 void NetworkModelManager::stop() {

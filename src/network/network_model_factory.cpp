@@ -1,11 +1,12 @@
 #include "network/network_model_factory.hpp"
+#include <memory>
 #include "network/asio_network_model.hpp"
 #include "network/epoll_network_model.hpp"
 #include "network/libhv_network_model.hpp"
 
 namespace network {
 
-std::unique_ptr<BaseNetworkModel> NetworkModelFactory::createNetworkModel(
+std::shared_ptr<BaseNetworkModel> NetworkModelFactory::createNetworkModel(
     NetworkModelType type,
     common::MessageQueue& message_queue)
 {
