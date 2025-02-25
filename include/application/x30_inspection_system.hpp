@@ -3,7 +3,7 @@
 #include <atomic>
 #include <memory>
 #include <string>
-#include "network/x30_communication.hpp"
+#include "network/network_model_manager.hpp"
 #include "common/message_queue.hpp"
 #include "procedure/nav_procedure/nav_procedure.hpp"
 

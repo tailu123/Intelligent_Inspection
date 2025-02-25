@@ -1,231 +1,255 @@
-# X30巡检系统架构设计文档
+# 机器狗导航控制系统 - 架构设计
 
-## 1. 系统概述
+## 1. 架构概述
 
-### 1.1 设计目标
-X30巡检系统旨在提供一个高性能、可靠且可扩展的智能巡检解决方案。系统基于C++17开发，采用现代C++特性和设计模式，实现了一个模块化、松耦合的分层架构。
+机器狗导航控制系统采用分层架构设计，通过明确的职责划分和组件解耦，实现高内聚、低耦合的系统结构。本文档详细说明系统的架构设计、数据流动以及核心组件。
 
-### 1.2 关键特性
-- 高性能异步通信架构
-- 状态机驱动的业务流程
-- 可扩展的插件系统
-- 完善的错误处理机制
-- 基于事件的消息处理
+## 2. 系统架构图
 
-## 2. 系统架构
-
-### 2.1 整体架构图
-
-```mermaid
-graph TB
-    subgraph "应用层 (Application Layer)"
-        A1[InspectionApp]
-        A2[命令行界面]
-        A3[系统初始化]
-        A1 --> A2
-        A1 --> A3
-    end
-
-    subgraph "业务逻辑层 (Business Logic Layer)"
-        B1[X30InspectionSystem]
-        B2[状态机管理]
-        B3[任务管理]
-        B4[消息队列]
-        B1 --> B2
-        B1 --> B3
-        B1 --> B4
-    end
-
-    subgraph "通信层 (Communication Layer)"
-        C1[AsyncCommunicationManager]
-        C2[X30Communication]
-        C3[消息处理器]
-        C1 --> C2
-        C2 --> C3
-    end
-
-    subgraph "数据层 (Data Layer)"
-        D1[配置管理]
-        D2[导航点数据]
-        D3[系统状态]
-        D1 --> D2
-        D1 --> D3
-    end
-
-    A1 --> B1
-    B1 --> C1
-    C1 --> D1
+```
++------------------------------------+
+|                                    |
+|               App层                |
+|                                    |
++------------------------------------+
+              |       ^
+              |       |
+              v       |
++------------------------------------+
+|                                    |
+|            Procedure层             |
+|                                    |
++------------------------------------+
+              |       ^
+              |       |
+              v       |
++------------------------------------+
+|                                    |
+|             Network层              |
+|                                    |
++------------------------------------+
+              |       ^
+              |       |
+              v       |
++------------------------------------+
+|                                    |
+|           物理机器狗设备           |
+|                                    |
++------------------------------------+
 ```
 
-### 2.2 核心模块说明
+## 3. 分层职责
 
-#### 2.2.1 应用层 (Application Layer)
-- **职责**：用户交互、系统初始化、任务调度
-- **关键组件**：
-  - `InspectionApp`: 应用程序主类
-  - `CommandLineInterface`: 命令行交互接口
-  - `SystemInitializer`: 系统初始化管理
+### 3.1 App层 (应用层)
 
-#### 2.2.2 业务逻辑层 (Business Logic Layer)
-- **职责**：业务流程控制、状态管理、任务处理
-- **关键组件**：
-  - `X30InspectionSystem`: 核心业务处理器
-  - `X30StateMachine`: 状态机管理器
-  - `TaskManager`: 任务管理器
-  - `MessageQueue`: 消息队列处理器
+应用层是系统的顶层，主要负责与用户的交互和系统的整体协调。
 
-#### 2.2.3 通信层 (Communication Layer)
-- **职责**：网络通信、协议处理、消息分发
-- **关键组件**：
-  - `AsyncCommunicationManager`: 异步通信管理器
-  - `X30Communication`: TCP通信实现
-  - `MessageProcessor`: 消息处理器
+**核心职责**:
+- 命令行界面(CLI)的实现与管理
+- 用户输入的解析和处理
+- 日志系统的管理
+- 应用级配置的加载和管理
 
-#### 2.2.4 数据层 (Data Layer)
-- **职责**：数据持久化、配置管理、状态存储
-- **关键组件**：
-  - `ConfigurationManager`: 配置管理器
-  - `NavigationPointManager`: 导航点管理
-  - `StateRepository`: 状态存储库
+**主要组件**:
+- `CommandLineInterface`: 处理终端命令输入
+- `Logger`: 系统日志管理
+- `ConfigManager`: 配置文件加载与解析
 
-## 3. 核心流程设计
+### 3.2 Procedure层 (业务层)
 
-### 3.1 状态机设计
-```mermaid
-stateDiagram-v2
-    [*] --> Idle
-    Idle --> Navigating: EvNavigationStart
-    Navigating --> Idle: EvNavigationComplete
-    Navigating --> Idle: EvNavigationCancel
-    Navigating --> Error: EvNavigationError
-    Error --> Idle: EvReset
+业务层是系统的核心，负责具体业务逻辑的实现。
+
+**核心职责**:
+- 状态机的管理与状态转换
+- 导航算法的实现
+- 业务逻辑处理
+- 事件处理和调度
+
+**主要组件**:
+- `NavigationStateMachine`: 基于Boost.MSM的状态机实现
+- `EventBus`: 事件发布与订阅系统
+- `MessageProcessor`: 消息处理器
+- `NavController`: 导航控制器
+
+### 3.3 Network层 (网络层)
+
+网络层负责与外部系统(机器狗硬件)的通信。
+
+**核心职责**:
+- TCP连接的建立与维护
+- 数据的序列化与反序列化
+- 网络异常的处理
+- 通信协议的实现
+
+**主要组件**:
+- `TcpClient`: TCP客户端实现
+- `MessageSerializer`: 消息序列化工具
+- `NetworkMonitor`: 网络状态监控
+- `ProtocolHandler`: 通信协议处理
+
+## 4. 核心数据流
+
+### 4.1 命令处理流程
+
+```
+用户输入 -> CLI解析 -> 创建Command消息 -> 放入MessageQueue
+-> ProcessingThread处理 -> 更新状态机 -> 执行相应操作
+-> 结果通过EventBus发布 -> UI更新
 ```
 
-### 3.2 消息处理流程
-```mermaid
-sequenceDiagram
-    participant Client
-    participant App as InspectionApp
-    participant System as X30InspectionSystem
-    participant Comm as AsyncCommunicationManager
+### 4.2 网络通信流程
 
-    Client->>App: 发送命令
-    App->>System: 创建消息
-    System->>System: 消息入队
-    System->>Comm: 异步发送
-    Comm-->>System: 响应回调
-    System-->>App: 状态更新
-    App-->>Client: 显示结果
+```
+ProcessingThread -> 创建网络请求 -> 发送到Network层
+-> TCP传输到机器狗设备 -> 接收响应 -> 解析响应
+-> 放入MessageQueue -> ProcessingThread处理 -> 更新状态机
+-> 通过EventBus发布事件
 ```
 
-## 4. 关键技术实现
+## 5. 线程模型
 
-### 4.1 异步通信实现
-```cpp
-class AsyncCommunicationManager {
-    boost::asio::io_context io_context_;
-    std::unique_ptr<boost::asio::io_context::work> work_;
-    std::thread io_thread_;
-    // ...
-};
+系统采用多线程设计，确保UI响应性和处理效率。
+
+### 5.1 线程结构
+
+```
++---------------+     +------------------+     +---------------+
+|    主线程     | --> |   ProcessingThread| --> |    网络线程    |
+| (CLI处理)     |     | (消息队列处理)    |     | (TCP通信)     |
++---------------+     +------------------+     +---------------+
 ```
 
-### 4.2 状态机实现
-```cpp
-struct X30StateMachine_ : public boost::msm::front::state_machine_def<X30StateMachine_> {
-    typedef StateIdle initial_state;
-    struct transition_table : boost::mpl::vector<
-        _row<StateIdle, EvNavigationStart, StateNavigating>,
-        _row<StateNavigating, EvNavigationComplete, StateIdle>,
-        // ...
-    > {};
-};
+### 5.2 线程职责
+
+- **主线程**: 处理用户输入，管理UI，确保界面响应
+- **处理线程**: 单线程消息队列处理，确保消息按顺序处理，避免并发问题
+- **网络线程**: 处理网络IO，避免阻塞主线程和处理线程
+
+### 5.3 线程间通信
+
+- 基于消息队列的异步通信
+- 无锁设计减少竞态条件
+- 事件总线实现组件间解耦
+
+## 6. 状态机设计
+
+系统核心使用基于Boost.MSM的状态机实现导航控制逻辑。
+
+### 6.1 状态定义
+
+- **Init**: 初始化状态，系统启动后的默认状态
+- **PrepareEnterNav**: 准备导航状态，初始化导航所需资源
+- **Nav**: 导航状态，执行导航算法和路径规划
+- **Done**: 完成状态，导航任务完成
+
+### 6.2 状态转换图
+
+```
++--------+     +----------------+     +-------+     +--------+
+|  Init  | --> | PrepareEnterNav| --> |  Nav  | --> |  Done  |
++--------+     +----------------+     +-------+     +--------+
+    ^                                                   |
+    |                                                   |
+    +---------------------------------------------------+
+                     (重新初始化)
 ```
 
-### 4.3 消息队列实现
-```cpp
-template<typename T>
-class ThreadSafeQueue {
-    std::mutex mutex_;
-    std::condition_variable not_empty_;
-    std::queue<T> queue_;
-    // ...
-};
+### 6.3 事件类型
+
+- `InitEvent`: 初始化事件
+- `PrepareNavEvent`: 准备导航事件
+- `StartNavEvent`: 开始导航事件
+- `CompleteEvent`: 完成事件
+- `ErrorEvent`: 错误事件，可触发状态回退
+
+## 7. 消息队列设计
+
+系统使用消息队列实现组件间的解耦和异步通信。
+
+### 7.1 消息类型
+
+- `CommandMessage`: 用户命令消息
+- `NavRequestMessage`: 导航请求消息
+- `NavResponseMessage`: 导航响应消息
+- `StatusUpdateMessage`: 状态更新消息
+- `ErrorMessage`: 错误消息
+
+### 7.2 消息处理流程
+
+1. 消息生产者将消息放入队列
+2. ProcessingThread从队列中取出消息
+3. 根据消息类型调用相应的处理器
+4. 处理结果通过EventBus发布
+
+## 8. 网络模型
+
+系统提供两种网络实现模型，可根据部署环境选择。
+
+### 8.1 Boost.Asio模型
+
+```
++----------------+     +----------------+     +----------------+
+| AsyncTcpClient | --> | IoServicePool  | --> |   CallbackHandler  |
++----------------+     +----------------+     +----------------+
 ```
 
-## 5. 性能优化设计
+- 基于非阻塞IO
+- 支持跨平台
+- 完善的错误处理
 
-### 5.1 内存管理
-- 使用智能指针管理资源
-- 对象池复用机制
-- 内存对齐优化
+### 8.2 Epoll模型
 
-### 5.2 并发控制
-- 基于strand的线程同步
-- 无锁队列设计
-- 异步操作链
+```
++----------------+     +----------------+     +----------------+
+|  EpollServer   | --> |   EventLoop    | --> |  MessageHandler |
++----------------+     +----------------+     +----------------+
+```
 
-### 5.3 I/O优化
-- 零拷贝技术
-- 缓冲区管理
-- 异步I/O操作
+- 高性能Linux原生支持
+- 更低的资源占用
+- 适合高并发场景
 
-## 6. 可扩展性设计
+## 9. 扩展性设计
 
-### 6.1 插件系统
-- 动态加载机制
-- 插件注册框架
-- 接口适配器
+系统设计考虑了未来的扩展需求。
 
-### 6.2 配置系统
-- JSON配置文件
-- 动态参数调整
-- 热加载支持
+### 9.1 插件架构
 
-## 7. 错误处理机制
+- 支持通过插件机制扩展功能
+- 定义标准接口实现功能扩展
+- 运行时动态加载
 
-### 7.1 异常处理
-- 分层异常处理
-- 错误码映射
-- 日志记录
+### 9.2 配置驱动
 
-### 7.2 故障恢复
-- 状态恢复机制
-- 断线重连
-- 数据一致性保证
+- 外部配置文件控制系统行为
+- 无需重新编译即可调整参数
+- 支持热加载配置
 
-## 8. 开发规范
+## 10. 安全性设计
 
-### 8.1 代码规范
-- Google C++风格指南
-- 命名约定
-- 注释规范
+### 10.1 异常处理
 
-### 8.2 版本控制
-- Git分支管理
-- 代码审查流程
-- 持续集成
+- 全面的异常捕获和处理机制
+- 故障安全设计原则
+- 优雅降级策略
 
-## 9. 部署架构
+### 10.2 资源管理
 
-### 9.1 运行环境
-- 操作系统要求
-- 依赖库版本
-- 硬件需求
+- RAII原则管理资源
+- 智能指针避免内存泄漏
+- 资源限制防止过度使用
 
-### 9.2 监控系统
-- 性能监控
-- 日志收集
-- 告警机制
+## 11. 性能考虑
 
-## 10. 安全设计
+### 11.1 关键性能指标
 
-### 10.1 通信安全
-- 数据加密
-- 身份认证
-- 访问控制
+- 命令响应时间 < 100ms
+- 网络通信延迟 < 50ms
+- CPU使用率 < 30%
+- 内存占用 < 200MB
 
-### 10.2 数据安全
-- 数据备份
-- 权限管理
-- 敏感信息保护
+### 11.2 性能优化策略
+
+- 内存池减少内存分配开销
+- 无锁数据结构减少线程同步开销
+- 批处理减少上下文切换

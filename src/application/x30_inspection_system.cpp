@@ -1,7 +1,7 @@
 #include "application/x30_inspection_system.hpp"
 #include "procedure/nav_procedure/nav_procedure.hpp"
 #include "common/event_bus.hpp"
-#include "network/x30_communication.hpp"
+#include "network/network_model_manager.hpp"
 #include "protocol/x30_protocol.hpp"
 #include <iostream>
 #include "common/utils.hpp"
