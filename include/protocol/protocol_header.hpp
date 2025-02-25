@@ -14,7 +14,6 @@ struct ProtocolHeader {
     uint16_t message_id;
     std::array<uint8_t, 8> reserved;
 
-    // ProtocolHeader作为数据类的话，适合定义构造函数吗？
     explicit ProtocolHeader();
     explicit ProtocolHeader(uint16_t length);
 

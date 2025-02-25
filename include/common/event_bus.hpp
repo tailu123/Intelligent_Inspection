@@ -5,10 +5,7 @@
 #include <mutex>
 #include <string>
 #include <unordered_map>
-
 #include "protocol/x30_protocol.hpp"
-// #include <vector>
-// #include <any>
 
 namespace common {
 
@@ -59,29 +56,15 @@ public:
         handlers_[eventType][handlerId] = handler;
         return handlerId;
     }
-    
+
 
     // 取消注册事件处理器
     void unsubscribe(const std::string& eventType, const std::string& handlerId);
-    // void unsubscribe(const std::string& eventType, const std::string& handlerId) {
-    //     std::lock_guard<std::mutex> lock(mutex_);
-    //     auto it = handlers_.find(eventType);
-    //     if (it != handlers_.end()) {
-    //         it->second.erase(handlerId);
-    //     }
-    // }
+
 
     // 发布事件
     void publish(const std::shared_ptr<Event>& event);
     void publish(const std::shared_ptr<Event>& event, const std::string& handlerId);
-    // void publish(const std::shared_ptr<Event>& event) {
-    //     std::lock_guard<std::mutex> lock(mutex_);
-    //     auto it = handlers_.find(typeid(*event).name());
-    //     if (it != handlers_.end()) {
-    //     for (const auto& [_, handler] : it->second) {
-    //         handler(event);
-    //     }
-    // }
 
 private:
     EventBus() = default;
@@ -104,17 +87,16 @@ private:
 struct NetworkErrorEvent : public Event {
     std::string getType() const override { return "NetworkError"; }
     std::string message;
-    // std::chrono::system_clock::time_point timestamp = std::chrono::system_clock::now();
 };
 
 struct QueryStatusEvent : public Event {
     std::string getType() const override { return "QueryStatus"; }
-    
+
     protocol::NavigationStatus status;
     int value;
     std::string timestamp;
     protocol::ErrorCode errorCode;
-    
+
     // 便于构造的静态工厂方法
     static std::shared_ptr<QueryStatusEvent> fromResponse(
         const protocol::QueryStatusResponse& resp) {
@@ -136,7 +118,6 @@ struct GetRealTimeStatusEvent : public Event {
     double posZ;
     double sumOdom;            // 累计里程
     int location;           // 位置  定位正常=0, 定位丢失=1
-    // 当前位置坐标: [PosX, PosY, PosZ]，累计里程数：{SumOdom}, 机器人定位状态: {Location}
 
     // 便于构造的静态工厂方法
     static std::shared_ptr<GetRealTimeStatusEvent> fromResponse(
@@ -152,30 +133,16 @@ struct GetRealTimeStatusEvent : public Event {
     }
 };
 
-struct MessageResponseEvent : public Event {
-    std::string getType() const override { return "MessageResponse"; }
-    uint32_t messageId;
-    bool success;
-    std::string data;
-};
-
-struct ConnectionStatusEvent : public Event {
-    std::string getType() const override { return "ConnectionStatus"; }
-    bool connected;
-    std::string message;
-};
-
-struct NavigationStatusEvent : public Event {
-    std::string getType() const override { return "NavigationStatus"; }
-    bool completed;
-    std::string currentPoint;
-    std::string status;
-};
-
 struct ErrorEvent : public Event {
     std::string getType() const override { return "Error"; }
     int code;
     std::string message;
+};
+
+struct NavigationTaskEvent : public Event {
+    std::string getType() const override { return "NavigationTask"; }
+
+    std::string status;
 };
 
 } // namespace common

@@ -4,6 +4,9 @@
 #include <iostream>
 #include <memory>
 #include "common/utils.hpp"
+#include "common/event_bus.hpp"
+#include "common/utils.hpp"
+#include <fmt/core.h>
 
 namespace procedure {
 
@@ -11,11 +14,7 @@ NavigationProcedure::NavigationProcedure(state::NavigationContext context) {
     state_machine_ = std::make_unique<state::NavigationMachine>(std::move(context));
 
     // 设置状态机终止回调
-    // TODO: 当业务复杂后，可以写清理代码
-
-    // 设置状态机终止回调
     state_machine_->set_terminate_callback([this]() {
-        // 清理代码
         stopStatusQuery();
     });
 }
@@ -27,7 +26,6 @@ NavigationProcedure::~NavigationProcedure()
 
 void NavigationProcedure::start() {
     // 启动状态机
-    std::cout << "启动状态机" << std::endl;
     state_machine_->start();
     startStatusQuery();
 }
@@ -53,7 +51,7 @@ void NavigationProcedure::process_event(const protocol::IMessage& message) {
             break;
         }
         default: {
-            std::cout << "[NavProc:WRN]: 无法处理当前消息类型" << std::endl;
+            std::cout << fmt::format("[{}]: [NavProc:WRN]: 无法处理当前消息类型", common::getCurrentTimestamp()) << std::endl;
             break;
         }
     }
@@ -64,8 +62,8 @@ void NavigationProcedure::statusQueryLoop() {
         std::this_thread::sleep_for(std::chrono::milliseconds(STATUS_QUERY_INTERVAL_MS));
         protocol::QueryStatusRequest request;
         request.timestamp = common::getCurrentTimestamp();
-        // std::cout << "定时发送1007 Request: " << request.timestamp << std::endl;
         state_machine_->context_.network_model->sendMessage(request);
+        std::cout << fmt::format("[{}]: [NavProc:INFO]: 定时发送1007 Request", request.timestamp) << std::endl;
     }
 }
 

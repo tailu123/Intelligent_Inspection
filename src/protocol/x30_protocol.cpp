@@ -1,11 +1,7 @@
 #include "protocol/x30_protocol.hpp"
-#include <chrono>
 #include <ctime>
-#include <iomanip>
 #include <sstream>
-#include <fstream>
 #include <iostream>
-#include <filesystem>
 #include "protocol/protocol_header.hpp"
 
 namespace {
@@ -117,7 +113,7 @@ bool NavigationTaskRequest::deserialize(const std::string& xml) {
             point.posY = std::stod(getValue(itemNode, "PosY"));
             point.posZ = std::stod(getValue(itemNode, "PosZ"));
             point.angleYaw = std::stod(getValue(itemNode, "AngleYaw"));
-            point.pointInfo = std::stoi(getValue(itemNode, "PointInfo"));
+            point.pointInfo = static_cast<PointInfo>(std::stoi(getValue(itemNode, "PointInfo")));
             point.gait = std::stoi(getValue(itemNode, "Gait"));
             point.speed = std::stoi(getValue(itemNode, "Speed"));
             point.manner = std::stoi(getValue(itemNode, "Manner"));
@@ -247,8 +243,8 @@ bool GetRealTimeStatusResponse::deserialize(const std::string& xml) {
         auto getValue = [](rapidxml::xml_node<>* parent, const char* name) -> std::string {
             auto node = parent->first_node(name);
             return node ? node->value() : "";
-        };  
-        
+        };
+
         motionState = std::stoi(getValue(itemsNode, "MotionState"));
         posX = std::stod(getValue(itemsNode, "PosX"));
         posY = std::stod(getValue(itemsNode, "PosY"));
@@ -276,7 +272,7 @@ bool GetRealTimeStatusResponse::deserialize(const std::string& xml) {
         controlMode = std::stoi(getValue(itemsNode, "ControlMode"));
         mapUpdateState = std::stoi(getValue(itemsNode, "MapUpdateState"));
 
-        return true;    
+        return true;
     } catch (const rapidxml::parse_error& e) {
         return false;
     }
@@ -491,6 +487,28 @@ std::ostream& operator<<(std::ostream& os, const NavigationStatus& status) {
 // 打印NavigationPoint
 std::ostream& operator<<(std::ostream& os, const NavigationPoint& point) {
     os << "NavigationPoint: " << point.mapId << ", " << point.value << ", " << point.posX << ", " << point.posY << ", " << point.posZ << ", " << point.angleYaw << ", " << point.pointInfo << ", " << point.gait << ", " << point.speed << ", " << point.manner << ", " << point.obsMode << ", " << point.navMode << ", " << point.terrain << ", " << point.posture;
+    return os;
+}
+
+// 打印PointInfo
+std::ostream& operator<<(std::ostream& os, const PointInfo& pointInfo) {
+    switch (pointInfo) {
+        case PointInfo::TRANSITION:
+            os << "过渡点";
+            break;
+        case PointInfo::TASK:
+            os << "任务点";
+            break;
+        case PointInfo::STAND:
+            os << "站立点";
+            break;
+        case PointInfo::CHARGE:
+            os << "充电点";
+            break;
+        default:
+            os << "未知";
+            break;
+    }
     return os;
 }
 

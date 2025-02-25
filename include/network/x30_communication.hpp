@@ -10,8 +10,7 @@
 namespace network {
 
 
-// 异步通信管理器
-// 换个名字，叫： NetworkModelManager
+// 通信管理器
 class NetworkModelManager {
 public:
     explicit NetworkModelManager(network::NetworkModelType model_type, common::MessageQueue& message_queue);

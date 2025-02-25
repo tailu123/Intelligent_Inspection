@@ -51,16 +51,7 @@ std::vector<protocol::NavigationPoint> loadNavigationPoints() {
     std::filesystem::path projectRoot = exePath.parent_path().parent_path();
     std::filesystem::path configPath = projectRoot / "config" / "default_params.json";
 
-    static std::vector<protocol::NavigationPoint> points;
-    points = loadDefaultNavigationPoints(configPath.string());
-    if (points.empty()) {
-        std::cout << "警告: 未能加载默认导航点，将使用示例导航点\n";
-        points = {
-            {0, 1, -4.2181582, 3.4758759, -0.056337897, -3.044234, 0, 0, 1, 0, 0, 0, 0, 0},
-            {0, 2, -9.1335344, 2.9462891, 0.093159825, -1.4948614, 0, 0, 1, 0, 0, 0, 0, 0}
-        };
-    }
-
+    static std::vector<protocol::NavigationPoint> points = loadDefaultNavigationPoints(configPath.string());
     return points;
 }
 
@@ -72,11 +63,5 @@ std::unordered_map<int, protocol::NavigationPoint> loadNavigationPointsMap() {
         pointsMap[point.value] = point;
     }
     return pointsMap;
-}
-
-// 辅助函数：根据导航点目标点编号获取导航点信息
-protocol::NavigationPoint getNavigationPointByValue(int value) {
-    static auto pointsMap = loadNavigationPointsMap();
-    return pointsMap[value];
 }
 } // namespace common

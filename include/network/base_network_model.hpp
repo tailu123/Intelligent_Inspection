@@ -1,4 +1,5 @@
 #pragma once
+
 #include <string>
 #include "protocol/x30_protocol.hpp"
 

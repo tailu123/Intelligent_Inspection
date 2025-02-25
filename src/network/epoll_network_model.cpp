@@ -157,8 +157,6 @@ void EpollNetworkModel::poll() {
 }
 
 bool EpollNetworkModel::handleRead() {
-    // char buffer[MAX_BUFFER_SIZE];
-
     while (true) {
         // 接收并验证协议头
         protocol::ProtocolHeader header;
@@ -176,7 +174,6 @@ bool EpollNetworkModel::handleRead() {
                         ssize_t bytes_read_now = read(socket_fd_, buffer.data() + bytes_read, bytes_to_read);
                         if (bytes_read_now > 0) {
                             bytes_read += bytes_read_now;
-                            // std::cout << "Read " << bytes_read_now << " bytes" << std::endl;
                         } else if (bytes_read_now == 0) {
                             return false;  // 连接关闭
                         } else if (errno != EAGAIN && errno != EWOULDBLOCK) {
@@ -189,7 +186,7 @@ bool EpollNetworkModel::handleRead() {
                     if (auto msg = protocol::MessageFactory::parseMessage(message)) {
                         message_queue_.push(std::move(msg));
                     } else {
-                        std::cout << "Message parse failed" << std::endl;
+                        handleError(fmt::format("Message parse failed"));
                         return false;  // 消息解析失败
                     }
                 }
@@ -228,10 +225,6 @@ bool EpollNetworkModel::handleWrite() {
     }
     return true;
 }
-
-// void EpollNetworkModel::setErrorCallback(ErrorCallback callback) {
-//     error_callback_ = std::move(callback);
-// }
 
 bool EpollNetworkModel::isConnected() const {
     return connected_;

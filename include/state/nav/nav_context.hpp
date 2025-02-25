@@ -1,6 +1,5 @@
 #pragma once
 
-#include "common/event_bus.hpp"
 #include "network/base_network_model.hpp"
 
 namespace common {
@@ -11,11 +10,6 @@ namespace state
 {
 // 导航上下文
 struct NavigationContext {
-    // EventBus使用单例
-    static common::EventBus& getEventBus() {
-        return common::EventBus::getInstance();
-    }
-
     // MessageQueue保持依赖注入
     common::MessageQueue& message_queue;
 

@@ -15,6 +15,8 @@
 #include "state/nav/nav_actions.hpp"
 #include "state/nav/nav_guards.hpp"
 #include "state/nav/nav_states.hpp"
+#include <fmt/core.h>
+#include "common/utils.hpp"
 
 namespace state {
 
@@ -49,33 +51,23 @@ struct NavigationMachine_ : public boost::msm::front::state_machine_def<Navigati
 
     // 转换表
     struct transition_table : boost::mpl::vector<
-    boost::msm::front::Row<Init, boost::msm::front::none, PrepareEnterNav, send_nav_request, boost::msm::front::none>,
-    // boost::msm::front::Row<Init, NavigationTaskRequest, PrepareEnterNav, send_nav_request, boost::msm::front::none>,
-    // boost::msm::front::Row<PrepareEnterNav, CancelTaskRequest, PrepareEnterNav, send_cancel_request, boost::msm::front::none>,
-    // boost::msm::front::Row<PrepareEnterNav, QueryStatusRequest, PrepareEnterNav, send_query_request, boost::msm::front::none>,
+    boost::msm::front::Row<Init, boost::msm::front::none, PrepareEnterNav, SendNavRequest, boost::msm::front::none>,
     boost::msm::front::Row<PrepareEnterNav, NavigationTaskResponse, Done, boost::msm::front::none, boost::msm::front::none>,
-    boost::msm::front::Row<PrepareEnterNav, CancelTaskResponse, Done, boost::msm::front::none, check_resp2004_guard>,
-    boost::msm::front::Row<PrepareEnterNav, QueryStatusResponse, Done, boost::msm::front::none, check_resp_status_completed_guard>,
-    boost::msm::front::Row<PrepareEnterNav, QueryStatusResponse, Nav, boost::msm::front::none, check_resp_status_executing_guard>,
-    // TODO: PrepareEnterNav 超时呢？
-    // boost::msm::front::Row<Nav, CancelTaskRequest, Nav, send_cancel_request, boost::msm::front::none>,
-    // boost::msm::front::Row<Nav, QueryStatusRequest, Nav, send_query_request, boost::msm::front::none>,
-    boost::msm::front::Row<Nav, CancelTaskResponse, Done, boost::msm::front::none, check_resp2004_guard>,
+    boost::msm::front::Row<PrepareEnterNav, CancelTaskResponse, Done, boost::msm::front::none, CheckCancelTaskResponseSuccess>,
+    boost::msm::front::Row<PrepareEnterNav, QueryStatusResponse, Done, boost::msm::front::none, CheckStatusQueryResponseCompleted>,
+    boost::msm::front::Row<PrepareEnterNav, QueryStatusResponse, Nav, boost::msm::front::none, CheckStatusQueryResponseExecuting>,
+    boost::msm::front::Row<Nav, CancelTaskResponse, Done, boost::msm::front::none, CheckCancelTaskResponseSuccess>,
     boost::msm::front::Row<Nav, NavigationTaskResponse, Done, boost::msm::front::none, boost::msm::front::none>,
-    // boost::msm::front::Row<Nav, GetRealTimeStatusRequest, Nav, send_query_status_request, boost::msm::front::none>,
-    boost::msm::front::Row<Nav, QueryStatusResponse, Nav, send_get_real_time_status_request, check_resp_status_executing_guard>,
-    boost::msm::front::Row<Nav, QueryStatusResponse, Done, boost::msm::front::none, check_resp_status_completed_guard>
+    boost::msm::front::Row<Nav, QueryStatusResponse, Nav, SendGetRealTimeStatusRequest, CheckStatusQueryResponseExecuting>,
+    boost::msm::front::Row<Nav, QueryStatusResponse, Done, boost::msm::front::none, CheckStatusQueryResponseCompleted>
     > {};
 
     // 处理未定义的转换
     template <class FSM, class Event>
     void no_transition(Event const&, FSM&, int state) {
-        std::cout << "[NavFsm:WRN]: 无法处理当前状态(" << state << ")下的事件" << std::endl;
+        std::cout << fmt::format("[{}]: [NavFsm:WRN]: 无法处理当前状态({})下的事件", common::getCurrentTimestamp(), state) << std::endl;
     }
 
-    // context引用
-    // NavigationMachine_(NavigationContext& context)
-    // : context_(context) {}
     NavigationMachine_(NavigationContext context)
         : context_(std::move(context)) { }
 
@@ -84,22 +76,5 @@ struct NavigationMachine_ : public boost::msm::front::state_machine_def<Navigati
 
 // 后端状态机定义
 typedef boost::msm::back::state_machine<NavigationMachine_> NavigationMachine;
-
-// 状态查询函数
-inline bool isInInit(const NavigationMachine& machine) {
-    return machine.is_flag_active<Init>();
-}
-
-inline bool isInPrepareEnterNav(const NavigationMachine& machine) {
-    return machine.is_flag_active<PrepareEnterNav>();
-}
-
-inline bool isInNav(const NavigationMachine& machine) {
-    return machine.is_flag_active<Nav>();
-}
-
-inline bool isInDone(const NavigationMachine& machine) {
-    return machine.is_flag_active<Done>();
-}
 
 } // namespace state

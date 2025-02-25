@@ -22,7 +22,4 @@ std::vector<protocol::NavigationPoint> loadNavigationPoints();
 
 // 辅助函数：加载导航点map
 std::unordered_map<int, protocol::NavigationPoint> loadNavigationPointsMap();
-
-// 辅助函数：根据导航点目标点编号获取导航点信息
-protocol::NavigationPoint getNavigationPointByValue(int value);
 } // namespace common

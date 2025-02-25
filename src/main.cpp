@@ -16,30 +16,8 @@ enum class CommandResult {
     EXIT
 };
 
-// TODO: 巡检应用程序打印方式
-// 开始巡检任务
-// 正在前往点位 {Value}， 目标点类型: {过渡点/任务点/站立点}，点位坐标: [PosX, PosY, PosZ]...
-// 当前位置坐标: [PosX, PosY, PosZ]，累计里程数：{SumOdom}, 机器人定位状态: {Location}
-// 当前位置坐标: [PosX, PosY, PosZ]，累计里程数：{SumOdom}, 机器人定位状态: {Location}
-// 当前位置坐标: [PosX, PosY, PosZ]，累计里程数：{SumOdom}, 机器人定位状态: {Location}
-// ...............................................................
-// 到达点位 {Value}
+std::unordered_map<int, protocol::NavigationPoint> point_map_ = common::loadNavigationPointsMap();
 
-// 正在前往点位 {Value}， 目标点类型: {过渡点/任务点/站立点}，点位坐标: [PosX, PosY, PosZ]...
-// 当前位置坐标: [PosX, PosY, PosZ]，累计里程数：{SumOdom}, 机器人定位状态: {Location}
-// 当前位置坐标: [PosX, PosY, PosZ]，累计里程数：{SumOdom}, 机器人定位状态: {Location}
-// 当前位置坐标: [PosX, PosY, PosZ]，累计里程数：{SumOdom}, 机器人定位状态: {Location}
-// ...............................................................
-// 到达点位 {Value}
-
-// 正在前往点位 {Value}， 目标点类型: {过渡点/任务点/站立点}，点位坐标: [PosX, PosY, PosZ]...
-// 当前位置坐标: [PosX, PosY, PosZ]，累计里程数：{SumOdom}, 机器人定位状态: {Location}
-// 当前位置坐标: [PosX, PosY, PosZ]，累计里程数：{SumOdom}, 机器人定位状态: {Location}
-// 当前位置坐标: [PosX, PosY, PosZ]，累计里程数：{SumOdom}, 机器人定位状态: {Location}
-// ...............................................................
-// 到达点位 {Value}
-
-// 巡检任务结束
 class InspectionApp {
 public:
 
@@ -48,8 +26,7 @@ public:
 
     // 初始化应用程序
     bool initialize(const std::string& host, uint16_t port) {
-        setupCallbacks();
-        setupEventHandlers(); // TODO: 新增业务逻辑
+        setupEventHandlers();
 
         if (!system_->initialize(host, port)) {
             std::cout << "系统初始化失败\n";
@@ -80,84 +57,44 @@ public:
     }
 
 private:
-    // 设置回调函数
-    void setupCallbacks() {
-        application::InspectionCallback callback;
-        callback.onStarted = []() {
-            std::cout << "巡检任务已启动\n";
-        };
-        callback.onCompleted = []() {
-            std::cout << "巡检任务已完成\n";
-        };
-        callback.onError = [](int code, const std::string& msg) {
-            std::cout << "错误 [" << code << "]: " << msg << "\n";
-        };
-        callback.onStatusUpdate = [](const std::string& status) {
-            std::cout << "状态更新: " << status << "\n";
-        };
-        system_->setCallback(callback);
-    }
-
     // 设置事件处理器
     void setupEventHandlers() {
-        // 订阅状态查询事件
+        // 订阅网络错误事件
+        common::EventBus::getInstance().subscribe<common::NetworkErrorEvent>([](const std::shared_ptr<common::Event>& event) {
+            auto errorEvent = std::static_pointer_cast<common::NetworkErrorEvent>(event);
+            std::cout << fmt::format("[{}]: 网络错误: {}, 请检查网络连接, 程序需要重新启动", common::getCurrentTimestamp(), errorEvent->message) << std::endl;
+        });
+
+        // 订阅导航任务事件
+        common::EventBus::getInstance().subscribe<common::NavigationTaskEvent>(
+            [](const std::shared_ptr<common::Event>& event) {
+                auto taskEvent = std::static_pointer_cast<common::NavigationTaskEvent>(event);
+                std::cout << fmt::format("[{}]: 导航任务执行状态: {}", common::getCurrentTimestamp(), taskEvent->status) << std::endl;
+            }
+        );
+
+        // 订阅状态查询消息响应事件
         common::EventBus::getInstance().subscribe<common::QueryStatusEvent>(
             [](const std::shared_ptr<common::Event>& event) {
-                // std::cout << "callback by EventBus" << std::endl;
                 auto queryEvent = std::static_pointer_cast<common::QueryStatusEvent>(event);
                 if (queryEvent->status == protocol::NavigationStatus::EXECUTING) {
                     static int lastValue = 0;
                     if (lastValue != queryEvent->value) {
                         lastValue = queryEvent->value;
-                        // 正在前往点位 {Value}， 目标点类型: {过渡点/任务点/站立点}，点位坐标: [PosX, PosY, PosZ]...
-                        auto&& point = common::getNavigationPointByValue(queryEvent->value);
-                        std::string pointType = point.pointInfo == 0 ? "过渡点" :
-                            point.pointInfo == 1 ? "任务点" : 
-                            point.pointInfo == 2 ? "站立点" : 
-                            point.pointInfo == 3 ? "充电点" : "未知";
-                        std::cout << fmt::format("正在前往点位 {}， 目标点类型: {}，点位坐标: [{}, {}, {}]...",
-                        queryEvent->value, pointType, point.posX, point.posY, point.posZ) << std::endl;
+                        auto&& point = point_map_[queryEvent->value];
+                        std::cout << fmt::format("[{}]: 正在前往点位 {}， 目标点类型: {}，点位坐标: [{}, {}, {}]...",
+                        queryEvent->timestamp, queryEvent->value, point.pointInfo, point.posX, point.posY, point.posZ) << std::endl;
                     }
                 }
             }
         );
 
-        // 订阅实时状态事件
+        // 订阅实时状态消息响应事件
         common::EventBus::getInstance().subscribe<common::GetRealTimeStatusEvent>(
             [](const std::shared_ptr<common::Event>& event) {
                 auto realTimeEvent = std::static_pointer_cast<common::GetRealTimeStatusEvent>(event);
-                // 当前位置坐标: [PosX, PosY, PosZ]，累计里程数：{SumOdom}, 机器人定位状态: {Location}
-                std::cout << fmt::format("当前位置坐标: [{}, {}, {}]，累计里程数：{}, 机器人定位状态: {}",
-                realTimeEvent->posX, realTimeEvent->posY, realTimeEvent->posZ, realTimeEvent->sumOdom, realTimeEvent->location) << std::endl;
-            }
-        );
-
-        // 订阅导航任务响应事件
-        common::EventBus::getInstance().subscribe<common::MessageResponseEvent>(
-            [](const std::shared_ptr<common::Event>& event) {
-                auto respEvent = std::static_pointer_cast<common::MessageResponseEvent>(event);
-                std::cout << "收到响应: " << respEvent->data <<
-                    (respEvent->success ? " (成功)" : " (失败)") << std::endl;
-            }
-        );
-
-        // 订阅连接状态事件
-        common::EventBus::getInstance().subscribe<common::ConnectionStatusEvent>(
-            [](const std::shared_ptr<common::Event>& event) {
-                auto connEvent = std::static_pointer_cast<common::ConnectionStatusEvent>(event);
-                std::cout << "连接状态: " <<
-                    (connEvent->connected ? "已连接" : "已断开") <<
-                    " - " << connEvent->message << std::endl;
-            }
-        );
-
-        // 订阅导航状态事件
-        common::EventBus::getInstance().subscribe<common::NavigationStatusEvent>(
-            [](const std::shared_ptr<common::Event>& event) {
-                auto navEvent = std::static_pointer_cast<common::NavigationStatusEvent>(event);
-                std::cout << "导航状态: " << navEvent->status <<
-                    (navEvent->completed ? " (已完成)" : "") <<
-                    " - 当前点: " << navEvent->currentPoint << std::endl;
+                std::cout << fmt::format("[{}]: 当前位置坐标: [{}, {}, {}]，累计里程数：{}, 机器人定位状态: {}",
+                realTimeEvent->timestamp, realTimeEvent->posX, realTimeEvent->posY, realTimeEvent->posZ, realTimeEvent->sumOdom, realTimeEvent->location) << std::endl;
             }
         );
 
@@ -165,8 +102,7 @@ private:
         common::EventBus::getInstance().subscribe<common::ErrorEvent>(
             [](const std::shared_ptr<common::Event>& event) {
                 auto errorEvent = std::static_pointer_cast<common::ErrorEvent>(event);
-                std::cout << "错误事件: [" << errorEvent->code << "] " <<
-                    errorEvent->message << std::endl;
+                std::cout << fmt::format("[{}]: 错误 [{}]: {}", common::getCurrentTimestamp(), errorEvent->code, errorEvent->message) << std::endl;
             }
         );
     }
