@@ -8,6 +8,7 @@ namespace procedure {
 class BaseProcedure
 {
 public:
+    virtual ~BaseProcedure() = default;
     virtual void start() = 0;
     virtual void process_event(const protocol::IMessage& message) = 0;
 };

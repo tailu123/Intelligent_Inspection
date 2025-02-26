@@ -71,7 +71,7 @@ sequenceDiagram
 - MessageQueue：消息队列，确保线程安全的消息传递
 - EventBus：事件总线，负责组件间的解耦通信
 - CLI：命令行接口，处理用户输入
-- Network：网络层，处理与机器人的通信
+- Network：网络层，处理与机器狗的通信
 
 ### 3.2 网络模型
 提供两种网络实现方案：
@@ -90,11 +90,11 @@ sequenceDiagram
 ```
 project/
 ├── include/                    # 头文件
-│   ├── app/                   # 应用层头文件
-│   ├── procedure/            # 业务层头文件
-│   └── network/              # 网络层头文件
-├── src/                       # 源文件
-│   ├── app/
+│   ├── application/            # 应用层头文件
+│   ├── procedure/              # 业务层头文件
+│   └── network/                # 网络层头文件
+├── src/                        # 源文件
+│   ├── application/
 │   ├── procedure/
 │   └── network/
 ├── test/                      # 测试文件
@@ -119,7 +119,7 @@ cmake ..
 make
 ```
 
-### 5.3 运行测试
+### 5.3 运行测试(TODO)
 ```bash
 cd build
 ctest

@@ -5,10 +5,10 @@
 #include <string>
 #include "network/network_model_manager.hpp"
 #include "common/message_queue.hpp"
-#include "procedure/nav_procedure/nav_procedure.hpp"
+#include <thread>
 
 namespace procedure {
-class NavigationProcedure;
+class BaseProcedure;
 } // namespace procedure
 
 namespace application {
@@ -49,7 +49,7 @@ private:
     std::unique_ptr<network::NetworkModelManager> network_model_manager_;
 
     // 业务核心
-    std::unique_ptr<procedure::NavigationProcedure> nav_state_procedure_;
+    std::unique_ptr<procedure::BaseProcedure> nav_state_procedure_;
 
     // 消息队列
     common::MessageQueue message_queue_;

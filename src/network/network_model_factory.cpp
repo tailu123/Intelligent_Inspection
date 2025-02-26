@@ -1,5 +1,4 @@
 #include "network/network_model_factory.hpp"
-#include <memory>
 #include "network/asio_network_model.hpp"
 #include "network/epoll_network_model.hpp"
 #include "network/libhv_network_model.hpp"

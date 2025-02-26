@@ -28,8 +28,8 @@
 
 ```bash
 # 克隆仓库
-git clone https://github.com/yourusername/robot-dog-navigation.git
-cd robot-dog-navigation
+git clone https://github.com/tailu123/Intelligent_Inspection.git
+cd Intelligent_Inspection
 
 # 构建项目
 mkdir build && cd build
@@ -37,7 +37,7 @@ cmake ..
 make -j$(nproc)
 
 # 运行程序
-./bin/robot_nav
+./x30_inspection_system <IP> <PORT>
 ```
 
 ## 文档

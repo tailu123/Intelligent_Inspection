@@ -1,27 +1,24 @@
 #pragma once
 
-#include <boost/asio.hpp>
-#include <memory>
-#include <thread>
 #include "common/message_queue.hpp"
-#include "network/base_network_model.hpp"
 #include "network/network_model_factory.hpp"
+#include "network/i_network_model_manager.hpp"
 
 namespace network {
 
 
 // 通信管理器
-class NetworkModelManager {
+class NetworkModelManager : public INetworkModelManager {
 public:
     explicit NetworkModelManager(network::NetworkModelType model_type, common::MessageQueue& message_queue);
-    ~NetworkModelManager();
+    ~NetworkModelManager() override;
 
     // 启动和停止
-    bool start(const std::string& host, uint16_t port);
-    void stop();
+    bool start(const std::string& host, uint16_t port) override;
+    void stop() override;
 
     // 获取网络模型实例
-    std::shared_ptr<BaseNetworkModel> getNetworkModel();
+    std::shared_ptr<BaseNetworkModel> getNetworkModel() override;
 
 private:
     network::NetworkModelType model_type_;

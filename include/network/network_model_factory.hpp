@@ -1,7 +1,5 @@
 #pragma once
 #include <memory>
-#include <string>
-#include "network/base_network_model.hpp"
 
 namespace common
 {
@@ -10,6 +8,7 @@ class MessageQueue;
 
 namespace network {
 
+class BaseNetworkModel;
 enum class NetworkModelType {
     ASIO,
     EPOLL,

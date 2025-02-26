@@ -24,8 +24,8 @@
 
 ```bash
 # 克隆仓库
-git clone https://github.com/yourusername/robot-dog-navigation.git
-cd robot-dog-navigation
+git clone https://github.com/tailu123/Intelligent_Inspection.git
+cd Intelligent_Inspection
 
 # 安装依赖 (Ubuntu)
 sudo apt update
@@ -35,7 +35,7 @@ sudo apt install -y build-essential cmake libboost-all-dev libssl-dev
 mkdir build && cd build
 cmake ..
 make -j$(nproc)
-sudo make install
+# sudo make install
 ```
 
 ### 3.2 使用Docker

@@ -11,7 +11,7 @@ namespace procedure {
 class NavigationProcedure : public BaseProcedure {
 public:
     explicit NavigationProcedure(state::NavigationContext context);
-    ~NavigationProcedure();
+    ~NavigationProcedure() override;
 
     void start() override;
     void process_event(const protocol::IMessage& message) override;

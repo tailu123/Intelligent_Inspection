@@ -37,8 +37,8 @@ sudo apt install -y doxygen python3 python3-pip
 sudo apt install -y libboost-all-dev libssl-dev
 
 # 克隆代码库
-git clone https://github.com/yourusername/robot-dog-navigation.git
-cd robot-dog-navigation
+git clone https://github.com/tailu123/Intelligent_Inspection.git
+cd Intelligent_Inspection
 
 # 设置开发环境
 python3 scripts/setup_env.py
@@ -55,8 +55,8 @@ brew install cmake ninja boost openssl doxygen
 brew install python
 
 # 克隆代码库
-git clone https://github.com/yourusername/robot-dog-navigation.git
-cd robot-dog-navigation
+git clone https://github.com/tailu123/Intelligent_Inspection.git
+cd Intelligent_Inspection
 
 # 设置开发环境
 python3 scripts/setup_env.py
@@ -65,7 +65,7 @@ python3 scripts/setup_env.py
 ## 2. 项目结构说明
 
 ```
-robot-dog-navigation/
+Intelligent_Inspection/
 ├── include/                    # 头文件
 │   ├── app/                   # 应用层头文件
 │   │   ├── cli/               # 命令行界面
@@ -113,7 +113,7 @@ robot-dog-navigation/
 
 ```bash
 # 进入项目目录
-cd robot-dog-navigation
+cd Intelligent_Inspection
 
 # 创建构建目录
 mkdir -p build && cd build
@@ -141,7 +141,7 @@ ninja
 | `USE_STATIC_BOOST` | 使用Boost静态库 | `OFF` |
 | `NETWORK_IMPL` | 网络实现选择(asio/epoll) | `asio` |
 
-### 3.3 运行测试
+### 3.3 运行测试(TODO)
 
 ```bash
 # 在构建目录下

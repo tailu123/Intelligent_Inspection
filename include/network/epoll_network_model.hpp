@@ -23,7 +23,6 @@ public:
     void disconnect() override;
     bool isConnected() const override;
     void sendMessage(const protocol::IMessage& message) override;
-    // void setErrorCallback(ErrorCallback callback) override;
 
 private:
     // 初始化epoll
@@ -51,7 +50,6 @@ private:
     std::unique_ptr<std::thread> event_thread_;
     std::queue<std::string> write_queue_;
     std::mutex write_mutex_;
-    // ErrorCallback error_callback_;
 
     static const ssize_t MAX_BUFFER_SIZE = 4096;
     static const int MAX_EVENTS = 10;
