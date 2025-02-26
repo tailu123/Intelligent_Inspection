@@ -36,7 +36,7 @@ bool X30InspectionSystem::initialize(const std::string& host, uint16_t port) {
 
     // 初始化通信管理器
     network_model_manager_ = std::make_unique<network::NetworkModelManager>(
-        network::NetworkModelType::ASIO, message_queue_);
+        network::NetworkModelType::EPOLL, message_queue_);
     if (!network_model_manager_->start(host, port)) {
         return false;
     }
@@ -180,13 +180,14 @@ void X30InspectionSystem::messageProcessingLoop() {
                     break;
                 }
                 case protocol::MessageType::QUERY_STATUS_RESP: { // 状态查询响应
+                    auto event = common::QueryStatusEvent::fromResponse(
+                            dynamic_cast<const protocol::QueryStatusResponse&>(*message));
+                    common::EventBus::getInstance().publish(event);
+
                     if (nav_state_procedure_) {
                         nav_state_procedure_->process_event(*message);
                     }
 
-                    auto event = common::QueryStatusEvent::fromResponse(
-                            dynamic_cast<const protocol::QueryStatusResponse&>(*message));
-                    common::EventBus::getInstance().publish(event);
                     break;
                 }
                 default : {

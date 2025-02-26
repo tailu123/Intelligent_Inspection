@@ -9,6 +9,7 @@
 #include "common/utils.hpp"
 namespace x30 {
 
+std::atomic<bool> program_running_(true);
 // 命令处理结果
 enum class CommandResult {
     SUCCESS,
@@ -45,10 +46,13 @@ public:
         printHelp();
         std::string command;
 
-        while (true) {
+        while (program_running_) {
             std::cout << "\n请输入命令:\n";
             std::getline(std::cin, command);
 
+            if (not program_running_) {
+                break;
+            }
             auto result = handleCommand(command);
             if (result == CommandResult::EXIT) {
                 break;
@@ -63,6 +67,7 @@ private:
         common::EventBus::getInstance().subscribe<common::NetworkErrorEvent>([](const std::shared_ptr<common::Event>& event) {
             auto errorEvent = std::static_pointer_cast<common::NetworkErrorEvent>(event);
             std::cout << fmt::format("[{}]: 网络错误: {}, 请检查网络连接, 程序需要重新启动", common::getCurrentTimestamp(), errorEvent->message) << std::endl;
+            program_running_ = false;
         });
 
         // 订阅导航任务事件
@@ -82,9 +87,17 @@ private:
                     if (lastValue != queryEvent->value) {
                         lastValue = queryEvent->value;
                         auto&& point = point_map_[queryEvent->value];
-                        std::cout << fmt::format("[{}]: 正在前往点位 {}， 目标点类型: {}，点位坐标: [{}, {}, {}]...",
-                        queryEvent->timestamp, queryEvent->value, point.pointInfo, point.posX, point.posY, point.posZ) << std::endl;
+                        std::cout << fmt::format("[{}]: 正在前往点位 {}， 目标点类型: {}，点位坐标: [{}, {}, {}] ********************************",
+                            common::getCurrentTimestamp(), queryEvent->value, common::convertPointType(point.pointInfo), point.posX, point.posY, point.posZ) << std::endl;
                     }
+                }
+                else if (queryEvent->status == protocol::NavigationStatus::FAILED) {
+                    std::cout << fmt::format("[{}]: 查询到设备运行状态异常, status: {} ********************************",
+                        common::getCurrentTimestamp(), queryEvent->status) << std::endl;
+                }
+                else if (queryEvent->status == protocol::NavigationStatus::COMPLETED) {
+                    std::cout << fmt::format("[{}]: 查询到导航任务执行完成, status: {} ********************************",
+                        common::getCurrentTimestamp(), queryEvent->status) << std::endl;
                 }
             }
         );
@@ -94,7 +107,7 @@ private:
             [](const std::shared_ptr<common::Event>& event) {
                 auto realTimeEvent = std::static_pointer_cast<common::GetRealTimeStatusEvent>(event);
                 std::cout << fmt::format("[{}]: 当前位置坐标: [{}, {}, {}]，累计里程数：{}, 机器人定位状态: {}",
-                realTimeEvent->timestamp, realTimeEvent->posX, realTimeEvent->posY, realTimeEvent->posZ, realTimeEvent->sumOdom, realTimeEvent->location) << std::endl;
+                common::getCurrentTimestamp(), realTimeEvent->posX, realTimeEvent->posY, realTimeEvent->posZ, realTimeEvent->sumOdom, realTimeEvent->location) << std::endl;
             }
         );
 
@@ -116,6 +129,7 @@ private:
 
     // 处理用户命令
     CommandResult handleCommand(const std::string& command) {
+
         if (command == "start" || command == "cancel" || command == "status") {
             system_->handleCommand(command);
             return CommandResult::CONTINUE;

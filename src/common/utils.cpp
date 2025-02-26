@@ -64,4 +64,21 @@ std::unordered_map<int, protocol::NavigationPoint> loadNavigationPointsMap() {
     }
     return pointsMap;
 }
+
+// 转换目标点类型
+std::string convertPointType(int pointType)
+{
+    switch (pointType) {
+        case 0:
+            return "过渡点";
+        case 1:
+            return "任务点";
+        case 2:
+            return "站立点";
+        case 3:
+            return "充电点";
+        default:
+            return "未知点";
+    }
+}
 } // namespace common

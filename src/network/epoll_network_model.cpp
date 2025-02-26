@@ -6,7 +6,6 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <string.h>
-#include <iostream>
 #include "protocol/protocol_header.hpp"
 #include <algorithm>
 #include <vector>
@@ -17,11 +16,11 @@
 namespace network {
 
 EpollNetworkModel::EpollNetworkModel(common::MessageQueue& message_queue)
-    : message_queue_(message_queue)
+    : running_(false)
+    , message_queue_(message_queue)
     , epoll_fd_(-1)
     , socket_fd_(-1)
-    , connected_(false)
-    , running_(false) {
+    , connected_(false) {
 }
 
 EpollNetworkModel::~EpollNetworkModel() {
@@ -89,10 +88,9 @@ bool EpollNetworkModel::connect(const std::string& host, uint16_t port) {
     }
 
     connected_ = true;
-    running_ = true;
-
     // 启动事件循环线程
-    event_thread_ = std::make_unique<std::thread>(&EpollNetworkModel::eventLoop, this);
+    running_ = true;
+    event_thread_ = std::thread(&EpollNetworkModel::eventLoop, this);
     return true;
 }
 
@@ -104,10 +102,6 @@ void EpollNetworkModel::disconnect() {
     running_ = false;
     connected_ = false;
 
-    if (event_thread_ && event_thread_->joinable()) {
-        event_thread_->join();
-    }
-
     if (socket_fd_ != -1) {
         close(socket_fd_);
         socket_fd_ = -1;
@@ -116,6 +110,8 @@ void EpollNetworkModel::disconnect() {
         close(epoll_fd_);
         epoll_fd_ = -1;
     }
+
+    handleError(fmt::format("网络连接失败"));
 }
 
 void EpollNetworkModel::eventLoop() {

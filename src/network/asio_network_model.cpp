@@ -2,13 +2,14 @@
 #include <fmt/core.h>
 #include "common/message_queue.hpp"
 #include "common/event_bus.hpp"
-#include <iostream>
 
 namespace network {
 AsioNetworkModel::AsioNetworkModel(common::MessageQueue& message_queue)
-    : asio_context_(std::make_unique<AsioContext>())
-    , socket_(asio_context_->get_io_context())
-    , strand_(asio_context_->get_io_context().get_executor())
+    : io_context_()
+    , io_thread_([this]() { io_context_.run(); })
+    , work_(io_context_)
+    , socket_(io_context_)
+    , strand_(io_context_.get_executor())
     , message_queue_(message_queue)
 {
 }
@@ -18,17 +19,21 @@ AsioNetworkModel::~AsioNetworkModel() {
 }
 
 bool AsioNetworkModel::connect(const std::string& host, uint16_t port) {
-    boost::asio::ip::tcp::resolver resolver(asio_context_->get_io_context());
+    boost::asio::ip::tcp::resolver resolver(io_context_);
     auto endpoints = resolver.resolve(host, std::to_string(port));
     return doConnect(*endpoints.begin());
 }
 
 void AsioNetworkModel::disconnect() {
+    // 1. 首先取消所有待处理的异步操作
     if (socket_.is_open()) {
         boost::system::error_code ec;
-        socket_.close(ec);
+        socket_.cancel(ec);  // 取消所有待处理的异步操作
+        socket_.close(ec);   // 关闭socket
     }
-    asio_context_.reset();
+
+    // 2. 停止IO上下文
+    io_context_.stop();
 }
 
 bool AsioNetworkModel::isConnected() const {
@@ -143,7 +148,6 @@ void AsioNetworkModel::handleWrite(const boost::system::error_code& error) {
         doWrite();
     } else {
         handleError(fmt::format("写入错误: {}", error.message()));
-        disconnect();
     }
 }
 

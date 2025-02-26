@@ -2,7 +2,6 @@
 
 #include "network/base_network_model.hpp"
 #include <atomic>
-#include <memory>
 #include <thread>
 #include <queue>
 #include <mutex>
@@ -41,13 +40,14 @@ private:
 private:
     void handleError(std::string_view error_msg);
     
+    std::thread event_thread_;
+    std::atomic<bool> running_;
+
     common::MessageQueue& message_queue_;
     int epoll_fd_;
     int socket_fd_;
     std::atomic<bool> connected_;
-    std::atomic<bool> running_;
 
-    std::unique_ptr<std::thread> event_thread_;
     std::queue<std::string> write_queue_;
     std::mutex write_mutex_;
 

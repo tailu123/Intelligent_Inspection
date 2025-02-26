@@ -63,7 +63,7 @@ void NavigationProcedure::statusQueryLoop() {
         protocol::QueryStatusRequest request;
         request.timestamp = common::getCurrentTimestamp();
         state_machine_->context_.network_model->sendMessage(request);
-        std::cout << fmt::format("[{}]: [NavProc:INFO]: 定时发送1007 Request", request.timestamp) << std::endl;
+        // std::cout << fmt::format("[{}]: [NavProc:INFO]: 定时发送1007 Request", request.timestamp) << std::endl;
     }
 }
 

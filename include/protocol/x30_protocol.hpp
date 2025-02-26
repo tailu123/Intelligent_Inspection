@@ -44,16 +44,6 @@ enum class NavigationStatus {
 // 打印NavigationStatus
 std::ostream& operator<<(std::ostream& os, const NavigationStatus& status);
 
-enum class PointInfo {
-    TRANSITION = 0,
-    TASK = 1,
-    STAND = 2,
-    CHARGE = 3,
-};
-
-// 打印PointInfo
-std::ostream& operator<<(std::ostream& os, const PointInfo& pointInfo);
-
 // 导航点信息
 struct NavigationPoint {
     int mapId = 0;
@@ -62,7 +52,7 @@ struct NavigationPoint {
     double posY = 0.0;
     double posZ = 0.0;
     double angleYaw = 0.0;
-    PointInfo pointInfo = PointInfo::TRANSITION;
+    int pointInfo = 0;
     int gait = 0;
     int speed = 0;
     int manner = 0;
@@ -80,7 +70,7 @@ struct NavigationPoint {
         point.posY = j.value("PosY", 0.0);
         point.posZ = j.value("PosZ", 0.0);
         point.angleYaw = j.value("AngleYaw", 0.0);
-        point.pointInfo = static_cast<PointInfo>(j.value("PointInfo", 0));
+        point.pointInfo = j.value("PointInfo", 0);
         point.gait = j.value("Gait", 0);
         point.speed = j.value("Speed", 0);
         point.manner = j.value("Manner", 0);

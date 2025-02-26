@@ -20,6 +20,6 @@ void SendGetRealTimeStatusRequest::execute(state::NavigationContext& context)
     protocol::GetRealTimeStatusRequest req;
     req.timestamp = common::getCurrentTimestamp();
     context.network_model->sendMessage(req);
-    std::cout << fmt::format("[{}]: [NavFsm:Action]: 发送1002 Request", req.timestamp) << std::endl;
+    // std::cout << fmt::format("[{}]: [NavFsm:Action]: 发送1002 Request", req.timestamp) << std::endl;
 }
 } // namespace state

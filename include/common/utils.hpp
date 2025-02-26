@@ -20,4 +20,7 @@ std::vector<protocol::NavigationPoint> loadNavigationPoints();
 
 // 辅助函数：加载导航点map
 std::unordered_map<int, protocol::NavigationPoint> loadNavigationPointsMap();
+
+// 转换目标点类型
+std::string convertPointType(int pointType);
 } // namespace common
