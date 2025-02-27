@@ -1,0 +1,24 @@
+---
+MainSourceFile:  '/home/lutaichen/workspace/test/Intelligent_Inspection/src/state/nav/nav_actions.cpp'
+Diagnostics:
+  - DiagnosticName:  readability-convert-member-functions-to-static
+    DiagnosticMessage:
+      Message:         'method ''execute'' can be made static'
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/state/nav/nav_actions.cpp'
+      FileOffset:      241
+      Replacements:
+        - FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/include/state/nav/nav_actions.hpp'
+          Offset:          329
+          Length:          0
+          ReplacementText: 'static '
+  - DiagnosticName:  readability-convert-member-functions-to-static
+    DiagnosticMessage:
+      Message:         'method ''execute'' can be made static'
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/state/nav/nav_actions.cpp'
+      FileOffset:      799
+      Replacements:
+        - FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/include/state/nav/nav_actions.hpp'
+          Offset:          659
+          Length:          0
+          ReplacementText: 'static '
+...

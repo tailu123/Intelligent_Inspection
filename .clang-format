@@ -196,7 +196,7 @@ IncludeBlocks: Preserve
 ReflowComments: false
 
 # 设置C++标准版本
-Standard: c++11
+Standard: c++17
 
 # 每行最大字符数限制
 ColumnLimit: 120

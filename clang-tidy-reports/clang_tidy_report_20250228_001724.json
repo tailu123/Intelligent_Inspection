@@ -1,0 +1,318 @@
+---
+MainSourceFile:  '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+Diagnostics:
+  - DiagnosticName:  hicpp-deprecated-headers
+    DiagnosticMessage:
+      Message:         'inclusion of deprecated C++ header ''errno.h''; consider using ''cerrno'' instead'
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      75
+      Replacements:    []
+    Notes:
+      - Message:         this fix will not be applied because it overlaps with another fix
+        FilePath:        ''
+        FileOffset:      0
+        Replacements:    []
+  - DiagnosticName:  modernize-deprecated-headers
+    DiagnosticMessage:
+      Message:         'inclusion of deprecated C++ header ''errno.h''; consider using ''cerrno'' instead'
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      75
+      Replacements:    []
+    Notes:
+      - Message:         this fix will not be applied because it overlaps with another fix
+        FilePath:        ''
+        FileOffset:      0
+        Replacements:    []
+  - DiagnosticName:  hicpp-deprecated-headers
+    DiagnosticMessage:
+      Message:         'inclusion of deprecated C++ header ''string.h''; consider using ''cstring'' instead'
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      137
+      Replacements:    []
+    Notes:
+      - Message:         this fix will not be applied because it overlaps with another fix
+        FilePath:        ''
+        FileOffset:      0
+        Replacements:    []
+  - DiagnosticName:  modernize-deprecated-headers
+    DiagnosticMessage:
+      Message:         'inclusion of deprecated C++ header ''string.h''; consider using ''cstring'' instead'
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      137
+      Replacements:    []
+    Notes:
+      - Message:         this fix will not be applied because it overlaps with another fix
+        FilePath:        ''
+        FileOffset:      0
+        Replacements:    []
+  - DiagnosticName:  clang-analyzer-optin.cplusplus.VirtualCall
+    DiagnosticMessage:
+      Message:         'Call to virtual method ''EpollNetworkModel::disconnect'' during destruction bypasses virtual dispatch'
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      749
+      Replacements:    []
+    Notes:
+      - Message:         'Call to virtual method ''EpollNetworkModel::disconnect'' during destruction bypasses virtual dispatch'
+        FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+        FileOffset:      749
+        Replacements:    []
+  - DiagnosticName:  readability-convert-member-functions-to-static
+    DiagnosticMessage:
+      Message:         'method ''setNonBlocking'' can be made static'
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      884
+      Replacements:
+        - FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/include/network/epoll_network_model.hpp'
+          Offset:          853
+          Length:          0
+          ReplacementText: 'static '
+  - DiagnosticName:  cppcoreguidelines-pro-type-vararg
+    DiagnosticMessage:
+      Message:         do not call c-style vararg functions
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      952
+      Replacements:    []
+  - DiagnosticName:  hicpp-vararg
+    DiagnosticMessage:
+      Message:         do not call c-style vararg functions
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      952
+      Replacements:    []
+  - DiagnosticName:  hicpp-signed-bitwise
+    DiagnosticMessage:
+      Message:         use of a signed integer operand with a binary bitwise operator
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      971
+      Replacements:    []
+  - DiagnosticName:  readability-simplify-boolean-expr
+    DiagnosticMessage:
+      Message:         redundant boolean literal in conditional return statement
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      1121
+      Replacements:
+        - FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+          Offset:          1083
+          Length:          66
+          ReplacementText: 'return epoll_fd_ != -1'
+  - DiagnosticName:  cppcoreguidelines-pro-type-member-init
+    DiagnosticMessage:
+      Message:         'uninitialized record type: ''server_addr'''
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      1484
+      Replacements:
+        - FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+          Offset:          1514
+          Length:          0
+          ReplacementText: '{}'
+  - DiagnosticName:  hicpp-member-init
+    DiagnosticMessage:
+      Message:         'uninitialized record type: ''server_addr'''
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      1484
+      Replacements:
+        - FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+          Offset:          1514
+          Length:          0
+          ReplacementText: '{}'
+  - DiagnosticName:  cppcoreguidelines-pro-type-cstyle-cast
+    DiagnosticMessage:
+      Message:         do not use C-style cast to convert between unrelated types
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      1855
+      Replacements:    []
+  - DiagnosticName:  cppcoreguidelines-pro-type-member-init
+    DiagnosticMessage:
+      Message:         'uninitialized record type: ''ev'''
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      2225
+      Replacements:
+        - FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+          Offset:          2246
+          Length:          0
+          ReplacementText: '{}'
+  - DiagnosticName:  hicpp-member-init
+    DiagnosticMessage:
+      Message:         'uninitialized record type: ''ev'''
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      2225
+      Replacements:
+        - FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+          Offset:          2246
+          Length:          0
+          ReplacementText: '{}'
+  - DiagnosticName:  cppcoreguidelines-avoid-c-arrays
+    DiagnosticMessage:
+      Message:         'do not declare C-style arrays, use std::array<> instead'
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      3255
+      Replacements:    []
+  - DiagnosticName:  hicpp-avoid-c-arrays
+    DiagnosticMessage:
+      Message:         'do not declare C-style arrays, use std::array<> instead'
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      3255
+      Replacements:    []
+  - DiagnosticName:  modernize-avoid-c-arrays
+    DiagnosticMessage:
+      Message:         'do not declare C-style arrays, use std::array<> instead'
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      3255
+      Replacements:    []
+  - DiagnosticName:  cppcoreguidelines-pro-bounds-array-to-pointer-decay
+    DiagnosticMessage:
+      Message:         'do not implicitly decay an array into a pointer; consider using gsl::array_view or an explicit cast instead'
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      3331
+      Replacements:    []
+  - DiagnosticName:  hicpp-no-array-decay
+    DiagnosticMessage:
+      Message:         'do not implicitly decay an array into a pointer; consider using gsl::array_view or an explicit cast instead'
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      3331
+      Replacements:    []
+  - DiagnosticName:  cppcoreguidelines-avoid-magic-numbers
+    DiagnosticMessage:
+      Message:         '100 is a magic number; consider replacing it with a named constant'
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      3351
+      Replacements:    []
+  - DiagnosticName:  readability-magic-numbers
+    DiagnosticMessage:
+      Message:         '100 is a magic number; consider replacing it with a named constant'
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      3351
+      Replacements:    []
+  - DiagnosticName:  cppcoreguidelines-pro-bounds-constant-array-index
+    DiagnosticMessage:
+      Message:         'do not use array subscript when the index is not an integer constant expression; use gsl::at() instead'
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      3518
+      Replacements:    []
+  - DiagnosticName:  readability-implicit-bool-conversion
+    DiagnosticMessage:
+      Message:         'implicit conversion ''unsigned int'' -> bool'
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      3518
+      Replacements:
+        - FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+          Offset:          3518
+          Length:          0
+          ReplacementText: '('
+        - FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+          Offset:          3544
+          Length:          0
+          ReplacementText: ') != 0u'
+  - DiagnosticName:  cppcoreguidelines-pro-bounds-constant-array-index
+    DiagnosticMessage:
+      Message:         'do not use array subscript when the index is not an integer constant expression; use gsl::at() instead'
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      3671
+      Replacements:    []
+  - DiagnosticName:  readability-implicit-bool-conversion
+    DiagnosticMessage:
+      Message:         'implicit conversion ''unsigned int'' -> bool'
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      3671
+      Replacements:
+        - FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+          Offset:          3671
+          Length:          0
+          ReplacementText: '('
+        - FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+          Offset:          3698
+          Length:          0
+          ReplacementText: ') != 0u'
+  - DiagnosticName:  cppcoreguidelines-pro-bounds-pointer-arithmetic
+    DiagnosticMessage:
+      Message:         do not use pointer arithmetic
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      4598
+      Replacements:    []
+  - DiagnosticName:  bugprone-branch-clone
+    DiagnosticMessage:
+      Message:         repeated branch in conditional chain
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      4816
+      Replacements:    []
+    Notes:
+      - Message:         end of the original
+        FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+        FileOffset:      4902
+        Replacements:    []
+      - Message:         clone 1 starts here
+        FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+        FileOffset:      4977
+        Replacements:    []
+  - DiagnosticName:  readability-simplify-boolean-expr
+    DiagnosticMessage:
+      Message:         redundant boolean literal in conditional return statement
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      5781
+      Replacements:    []
+  - DiagnosticName:  readability-simplify-boolean-expr
+    DiagnosticMessage:
+      Message:         redundant boolean literal in conditional return statement
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      6303
+      Replacements:    []
+  - DiagnosticName:  cppcoreguidelines-pro-type-member-init
+    DiagnosticMessage:
+      Message:         'uninitialized record type: ''ev'''
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      6410
+      Replacements:
+        - FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+          Offset:          6431
+          Length:          0
+          ReplacementText: '{}'
+  - DiagnosticName:  hicpp-member-init
+    DiagnosticMessage:
+      Message:         'uninitialized record type: ''ev'''
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      6410
+      Replacements:
+        - FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+          Offset:          6431
+          Length:          0
+          ReplacementText: '{}'
+  - DiagnosticName:  readability-simplify-boolean-expr
+    DiagnosticMessage:
+      Message:         redundant boolean literal in conditional return statement
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      6614
+      Replacements:
+        - FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+          Offset:          6533
+          Length:          109
+          ReplacementText: 'return epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, socket_fd_, &ev) != -1'
+  - DiagnosticName:  cppcoreguidelines-pro-type-member-init
+    DiagnosticMessage:
+      Message:         'uninitialized record type: ''ev'''
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      7071
+      Replacements:
+        - FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+          Offset:          7092
+          Length:          0
+          ReplacementText: '{}'
+  - DiagnosticName:  hicpp-member-init
+    DiagnosticMessage:
+      Message:         'uninitialized record type: ''ev'''
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      7071
+      Replacements:
+        - FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+          Offset:          7092
+          Length:          0
+          ReplacementText: '{}'
+  - DiagnosticName:  readability-convert-member-functions-to-static
+    DiagnosticMessage:
+      Message:         'method ''handleError'' can be made static'
+      FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp'
+      FileOffset:      7440
+      Replacements:
+        - FilePath:        '/home/lutaichen/workspace/test/Intelligent_Inspection/include/network/epoll_network_model.hpp'
+          Offset:          896
+          Length:          0
+          ReplacementText: 'static '
+...
