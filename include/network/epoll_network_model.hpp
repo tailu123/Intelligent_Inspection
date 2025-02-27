@@ -1,11 +1,11 @@
 #pragma once
 
-#include "network/base_network_model.hpp"
-#include <atomic>
-#include <thread>
-#include <queue>
-#include <mutex>
 #include <sys/epoll.h>
+#include <atomic>
+#include <mutex>
+#include <queue>
+#include <thread>
+#include "network/base_network_model.hpp"
 
 namespace common {
 class MessageQueue;
@@ -39,7 +39,7 @@ private:
 
 private:
     void handleError(std::string_view error_msg);
-    
+
     std::thread event_thread_;
     std::atomic<bool> running_;
 
@@ -52,4 +52,4 @@ private:
     std::mutex write_mutex_;
 };
 
-} // namespace network
+}  // namespace network

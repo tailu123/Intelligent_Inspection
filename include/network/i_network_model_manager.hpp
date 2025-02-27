@@ -19,4 +19,4 @@ public:
     virtual std::shared_ptr<BaseNetworkModel> getNetworkModel() = 0;
 };
 
-} // namespace network
+}  // namespace network

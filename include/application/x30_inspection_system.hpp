@@ -3,13 +3,13 @@
 #include <atomic>
 #include <memory>
 #include <string>
-#include "network/network_model_manager.hpp"
-#include "common/message_queue.hpp"
 #include <thread>
+#include "common/message_queue.hpp"
+#include "network/network_model_manager.hpp"
 
 namespace procedure {
 class BaseProcedure;
-} // namespace procedure
+}  // namespace procedure
 
 namespace application {
 
@@ -29,8 +29,8 @@ public:
 
     // 析构清理资源
     void shutdown();
-private:
 
+private:
     // 巡检任务管理
     bool startInspection();
     bool cancelInspection();
@@ -61,4 +61,4 @@ private:
     std::unique_ptr<procedure::BaseProcedure> nav_state_procedure_;
 };
 
-} // namespace application
+}  // namespace application

@@ -1,11 +1,10 @@
 #pragma once
 
 #include "common/message_queue.hpp"
-#include "network/network_model_factory.hpp"
 #include "network/i_network_model_manager.hpp"
+#include "network/network_model_factory.hpp"
 
 namespace network {
-
 
 // 通信管理器
 class NetworkModelManager : public INetworkModelManager {
@@ -26,4 +25,4 @@ private:
     common::MessageQueue& message_queue_;
 };
 
-} // namespace network
+}  // namespace network

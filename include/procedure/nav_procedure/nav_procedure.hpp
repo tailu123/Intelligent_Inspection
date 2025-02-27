@@ -1,10 +1,10 @@
 #pragma once
 
-#include <memory>
-#include "state/nav/nav_machine.hpp"
-#include "procedure/base_procedure.hpp"
 #include <atomic>
+#include <memory>
 #include <thread>
+#include "procedure/base_procedure.hpp"
+#include "state/nav/nav_machine.hpp"
 
 namespace procedure {
 
@@ -20,7 +20,7 @@ private:
     void statusQueryLoop();
     void startStatusQuery();
     void stopStatusQuery();
-    
+
     std::unique_ptr<state::NavigationMachine> state_machine_;
 
     // 定时1007状态查询相关
@@ -29,4 +29,4 @@ private:
     static constexpr int STATUS_QUERY_INTERVAL_MS = 1000;
 };
 
-} // namespace procedure
+}  // namespace procedure

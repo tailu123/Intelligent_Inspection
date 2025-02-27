@@ -6,7 +6,7 @@ BasedOnStyle: Google  # 基于Google的代码风格
 ############################################################################
 
 # 访问说明符(public、private等)的偏移，相对于类定义缩进-1个空格
-AccessModifierOffset: -1
+AccessModifierOffset: -4
 
 # 开括号(开圆括号、开尖括号、开方括号)后的对齐方式:
 # Align（对齐）、DontAlign（不对齐）、AlwaysBreak（总是在开括号后换行）
@@ -28,7 +28,7 @@ AlignTrailingComments: true
 ContinuationIndentWidth: 4
 
 # 标准缩进宽度
-IndentWidth: 2
+IndentWidth: 4
 
 # 缩进case标签
 IndentCaseLabels: true
@@ -43,7 +43,7 @@ IndentPPDirectives: None
 NamespaceIndentation: None
 
 # 制表位宽度
-TabWidth: 2
+TabWidth: 4
 
 # 不使用制表符进行缩进
 UseTab: Never

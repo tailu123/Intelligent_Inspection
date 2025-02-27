@@ -1,12 +1,12 @@
 #include "common/utils.hpp"
+#include <spdlog/spdlog.h>
 #include <chrono>
-#include <iomanip>
 #include <filesystem>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <nlohmann/json.hpp>
 #include "protocol/x30_protocol.hpp"
-#include <spdlog/spdlog.h>
 
 namespace common {
 
@@ -38,9 +38,11 @@ std::vector<protocol::NavigationPoint> loadDefaultNavigationPoints(const std::st
             points.push_back(protocol::NavigationPoint::fromJson(jsonPoint));
         }
 
-        spdlog::info("[{}]: [Utils:INFO]: 成功从配置文件加载了 {} 个导航点", common::getCurrentTimestamp(), points.size());
+        spdlog::info("[{}]: [Utils:INFO]: 成功从配置文件加载了 {} 个导航点", common::getCurrentTimestamp(),
+                     points.size());
         // std::cout << "成功从配置文件加载了 " << points.size() << " 个导航点" << std::endl;
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception& e) {
         spdlog::error("[{}]: [Utils:ERR]: 加载配置文件失败: {}", common::getCurrentTimestamp(), e.what());
         // std::cerr << "加载配置文件失败: " << e.what() << std::endl;
     }
@@ -68,8 +70,7 @@ std::unordered_map<int, protocol::NavigationPoint> loadNavigationPointsMap() {
 }
 
 // 转换目标点类型
-std::string convertPointType(int pointType)
-{
+std::string convertPointType(int pointType) {
     switch (pointType) {
         case 0:
             return "过渡点";
@@ -83,4 +84,4 @@ std::string convertPointType(int pointType)
             return "未知点";
     }
 }
-} // namespace common
+}  // namespace common

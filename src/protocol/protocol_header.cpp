@@ -34,42 +34,32 @@ uint16_t generateMessageId() {
     g_message_id_counter = (g_message_id_counter + 1) % 65536;
     return g_message_id_counter;
 }
-} // namespace
-
+}  // namespace
 
 namespace protocol {
 
-
 ProtocolHeader::ProtocolHeader()
-    : sync_byte1(HEADER_1)
-    , sync_byte2(HEADER_2)
-    , sync_byte3(HEADER_3)
-    , sync_byte4(HEADER_4)
-    , length(0)
-    , message_id(0) {
+    : sync_byte1(HEADER_1), sync_byte2(HEADER_2), sync_byte3(HEADER_3), sync_byte4(HEADER_4), length(0), message_id(0) {
     reserved.fill(RESERVED_VALUE);
 }
 
 ProtocolHeader::ProtocolHeader(uint16_t length)
-    : sync_byte1(HEADER_1)
-    , sync_byte2(HEADER_2)
-    , sync_byte3(HEADER_3)
-    , sync_byte4(HEADER_4)
-    , length(length)
-    , message_id(generateMessageId()) {
+    : sync_byte1(HEADER_1),
+      sync_byte2(HEADER_2),
+      sync_byte3(HEADER_3),
+      sync_byte4(HEADER_4),
+      length(length),
+      message_id(generateMessageId()) {
     reserved.fill(RESERVED_VALUE);
     toLittleEndian(reinterpret_cast<char*>(&this->length), sizeof(this->length));
 }
 
 bool ProtocolHeader::validateSyncBytes() const {
-    return sync_byte1 == HEADER_1 &&
-           sync_byte2 == HEADER_2 &&
-           sync_byte3 == HEADER_3 &&
-           sync_byte4 == HEADER_4;
+    return sync_byte1 == HEADER_1 && sync_byte2 == HEADER_2 && sync_byte3 == HEADER_3 && sync_byte4 == HEADER_4;
 }
 
 uint16_t ProtocolHeader::getBodySize() const {
     return length;
 }
 
-} // namespace protocol
+}  // namespace protocol

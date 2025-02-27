@@ -35,7 +35,7 @@ public:
     }
 
     // 注册事件处理器
-    template<typename T>
+    template <typename T>
     std::string subscribe(EventHandler handler) {
         static_assert(std::is_base_of<Event, T>::value, "T must inherit from Event");
 
@@ -47,7 +47,7 @@ public:
     }
 
     // 注册事件处理器
-    template<typename T>
+    template <typename T>
     std::string subscribe(EventHandler handler, const std::string& handlerId) {
         static_assert(std::is_base_of<Event, T>::value, "T must inherit from Event");
 
@@ -57,10 +57,8 @@ public:
         return handlerId;
     }
 
-
     // 取消注册事件处理器
     void unsubscribe(const std::string& eventType, const std::string& handlerId);
-
 
     // 发布事件
     void publish(const std::shared_ptr<Event>& event);
@@ -85,12 +83,16 @@ private:
 // 常用事件定义
 
 struct NetworkErrorEvent : public Event {
-    std::string getType() const override { return "NetworkError"; }
+    std::string getType() const override {
+        return "NetworkError";
+    }
     std::string message;
 };
 
 struct QueryStatusEvent : public Event {
-    std::string getType() const override { return "QueryStatus"; }
+    std::string getType() const override {
+        return "QueryStatus";
+    }
 
     protocol::NavigationStatus status;
     int value;
@@ -98,8 +100,7 @@ struct QueryStatusEvent : public Event {
     protocol::ErrorCode errorCode;
 
     // 便于构造的静态工厂方法
-    static std::shared_ptr<QueryStatusEvent> fromResponse(
-        const protocol::QueryStatusResponse& resp) {
+    static std::shared_ptr<QueryStatusEvent> fromResponse(const protocol::QueryStatusResponse& resp) {
         auto event = std::make_shared<QueryStatusEvent>();
         event->status = resp.status;
         event->value = resp.value;
@@ -110,18 +111,19 @@ struct QueryStatusEvent : public Event {
 };
 
 struct GetRealTimeStatusEvent : public Event {
-    std::string getType() const override { return "GetRealTimeStatus"; }
+    std::string getType() const override {
+        return "GetRealTimeStatus";
+    }
 
     std::string timestamp;
     double posX;
     double posY;
     double posZ;
-    double sumOdom;            // 累计里程
-    int location;           // 位置  定位正常=0, 定位丢失=1
+    double sumOdom;  // 累计里程
+    int location;    // 位置  定位正常=0, 定位丢失=1
 
     // 便于构造的静态工厂方法
-    static std::shared_ptr<GetRealTimeStatusEvent> fromResponse(
-        const protocol::GetRealTimeStatusResponse& resp) {
+    static std::shared_ptr<GetRealTimeStatusEvent> fromResponse(const protocol::GetRealTimeStatusResponse& resp) {
         auto event = std::make_shared<GetRealTimeStatusEvent>();
         event->timestamp = resp.timestamp;
         event->posX = resp.posX;
@@ -134,15 +136,19 @@ struct GetRealTimeStatusEvent : public Event {
 };
 
 struct ErrorEvent : public Event {
-    std::string getType() const override { return "Error"; }
+    std::string getType() const override {
+        return "Error";
+    }
     int code;
     std::string message;
 };
 
 struct NavigationTaskEvent : public Event {
-    std::string getType() const override { return "NavigationTask"; }
+    std::string getType() const override {
+        return "NavigationTask";
+    }
 
     std::string status;
 };
 
-} // namespace common
+}  // namespace common

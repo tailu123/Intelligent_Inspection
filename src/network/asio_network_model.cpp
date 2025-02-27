@@ -1,18 +1,17 @@
 #include "network/asio_network_model.hpp"
 // #include <fmt/core.h>
-#include "common/message_queue.hpp"
-#include "common/event_bus.hpp"
 #include <spdlog/spdlog.h>
+#include "common/event_bus.hpp"
+#include "common/message_queue.hpp"
 #include "common/utils.hpp"
 namespace network {
 AsioNetworkModel::AsioNetworkModel(common::MessageQueue& message_queue)
-    : io_context_()
-    , io_thread_([this]() { io_context_.run(); })
-    , work_(io_context_)
-    , socket_(io_context_)
-    , strand_(io_context_.get_executor())
-    , message_queue_(message_queue)
-{
+    : io_context_(),
+      io_thread_([this]() { io_context_.run(); }),
+      work_(io_context_),
+      socket_(io_context_),
+      strand_(io_context_.get_executor()),
+      message_queue_(message_queue) {
 }
 
 AsioNetworkModel::~AsioNetworkModel() {
@@ -56,15 +55,15 @@ void AsioNetworkModel::sendMessage(const protocol::IMessage& message) {
 bool AsioNetworkModel::doConnect(const boost::asio::ip::tcp::endpoint& endpoint) {
     auto self = shared_from_this();
     socket_.async_connect(endpoint,
-        boost::asio::bind_executor(strand_,
-            [this, self](const boost::system::error_code& error) {
-                if (!error) {
-                    doRead();
-                } else {
-                    // handleError(fmt::format("连接失败: {}", error.message()));
-                    handleError(fmt::format("连接失败: {}", error.message()));
-                }
-            }));
+                          boost::asio::bind_executor(strand_, [this, self](const boost::system::error_code& error) {
+                              if (!error) {
+                                  doRead();
+                              }
+                              else {
+                                  // handleError(fmt::format("连接失败: {}", error.message()));
+                                  handleError(fmt::format("连接失败: {}", error.message()));
+                              }
+                          }));
     return true;
 }
 
@@ -73,10 +72,10 @@ void AsioNetworkModel::doRead() {
 
     current_header_ = protocol::ProtocolHeader();
     // 1.读取固定长度的协议头
-    boost::asio::async_read(socket_,
-        boost::asio::buffer(&current_header_, sizeof(protocol::ProtocolHeader)),
-        boost::asio::bind_executor(strand_,
-            [this, self](const boost::system::error_code& error, std::size_t /*bytes_transferred*/) {
+    boost::asio::async_read(
+        socket_, boost::asio::buffer(&current_header_, sizeof(protocol::ProtocolHeader)),
+        boost::asio::bind_executor(
+            strand_, [this, self](const boost::system::error_code& error, std::size_t /*bytes_transferred*/) {
                 if (error) {
                     handleError(fmt::format("读取协议头失败: {}", error.message()));
                     return;
@@ -90,20 +89,20 @@ void AsioNetworkModel::doRead() {
                 // 2. 读取消息体
                 message_buffer_.resize(current_header_.length);
                 memset(message_buffer_.data(), 0, current_header_.length);
-                boost::asio::async_read(socket_,
-                    boost::asio::buffer(message_buffer_),
-                    boost::asio::bind_executor(strand_,
-                        [this, self](const boost::system::error_code& error, std::size_t /*bytes_transferred*/) {
-                            if (error) {
-                                handleError(fmt::format("读取消息体失败: {}", error.message()));
-                                return;
-                            }
-                            // 3. 处理完整消息
-                            processMessage(message_buffer_);
+                boost::asio::async_read(
+                    socket_, boost::asio::buffer(message_buffer_),
+                    boost::asio::bind_executor(strand_, [this, self](const boost::system::error_code& error,
+                                                                     std::size_t /*bytes_transferred*/) {
+                        if (error) {
+                            handleError(fmt::format("读取消息体失败: {}", error.message()));
+                            return;
+                        }
+                        // 3. 处理完整消息
+                        processMessage(message_buffer_);
 
-                            // 4. 继续读取下一条消息
-                            doRead();
-                        }));
+                        // 4. 继续读取下一条消息
+                        doRead();
+                    }));
             }));
 }
 
@@ -117,14 +116,15 @@ void AsioNetworkModel::handleError(std::string_view error_msg) {
 
 void AsioNetworkModel::processMessage(const std::vector<std::uint8_t>& message_data) {
     try {
-        std::string message{reinterpret_cast<const char*>(message_data.data()),
-                          message_data.size()};
+        std::string message{reinterpret_cast<const char*>(message_data.data()), message_data.size()};
         if (auto msg = protocol::MessageFactory::parseMessage(message)) {
             message_queue_.push(std::move(msg));
-        } else {
+        }
+        else {
             handleError(fmt::format("消息解析失败"));
         }
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception& e) {
         handleError(fmt::format("消息处理异常: {}", e.what()));
     }
 }
@@ -134,14 +134,11 @@ void AsioNetworkModel::doWrite() {
         return;
     }
 
-    boost::asio::async_write(socket_,
-        boost::asio::buffer(write_queue_.front()),
-        boost::asio::bind_executor(strand_,
-            [this, self = shared_from_this()](
-                const boost::system::error_code& error,
-                std::size_t /*bytes_transferred*/) {
-                    handleWrite(error);
-                }));
+    boost::asio::async_write(
+        socket_, boost::asio::buffer(write_queue_.front()),
+        boost::asio::bind_executor(
+            strand_, [this, self = shared_from_this()](const boost::system::error_code& error,
+                                                       std::size_t /*bytes_transferred*/) { handleWrite(error); }));
 }
 
 void AsioNetworkModel::handleWrite(const boost::system::error_code& error) {
@@ -149,9 +146,10 @@ void AsioNetworkModel::handleWrite(const boost::system::error_code& error) {
         std::lock_guard<std::mutex> lock(write_queue_mutex_);
         write_queue_.pop();
         doWrite();
-    } else {
+    }
+    else {
         handleError(fmt::format("写入错误: {}", error.message()));
     }
 }
 
-} // namespace network
+}  // namespace network

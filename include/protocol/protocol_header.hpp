@@ -1,6 +1,6 @@
 #pragma once
-#include <cstdint>
 #include <array>
+#include <cstdint>
 
 namespace protocol {
 
@@ -22,4 +22,4 @@ struct ProtocolHeader {
 };
 #pragma pack(pop)
 
-} // namespace protocol
+}  // namespace protocol

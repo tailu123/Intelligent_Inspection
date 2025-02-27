@@ -1,16 +1,16 @@
 #include "network/epoll_network_model.hpp"
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
-#include <unistd.h>
-#include <fcntl.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <netinet/in.h>
 #include <string.h>
-#include "protocol/protocol_header.hpp"
+#include <sys/socket.h>
+#include <unistd.h>
 #include <algorithm>
 #include <vector>
-#include "common/message_queue.hpp"
 #include "common/event_bus.hpp"
+#include "common/message_queue.hpp"
+#include "protocol/protocol_header.hpp"
 // #include <fmt/core.h>
 #include <spdlog/spdlog.h>
 #include "common/utils.hpp"
@@ -21,11 +21,7 @@ static const int MAX_EVENTS = 10;
 static const ssize_t MAX_BUFFER_SIZE = 4096;
 
 EpollNetworkModel::EpollNetworkModel(common::MessageQueue& message_queue)
-    : running_(false)
-    , message_queue_(message_queue)
-    , epoll_fd_(-1)
-    , socket_fd_(-1)
-    , connected_(false) {
+    : running_(false), message_queue_(message_queue), epoll_fd_(-1), socket_fd_(-1), connected_(false) {
 }
 
 EpollNetworkModel::~EpollNetworkModel() {
@@ -179,9 +175,11 @@ bool EpollNetworkModel::handleRead() {
                         ssize_t bytes_read_now = read(socket_fd_, buffer.data() + bytes_read, bytes_to_read);
                         if (bytes_read_now > 0) {
                             bytes_read += bytes_read_now;
-                        } else if (bytes_read_now == 0) {
+                        }
+                        else if (bytes_read_now == 0) {
                             return false;  // 连接关闭
-                        } else if (errno != EAGAIN && errno != EWOULDBLOCK) {
+                        }
+                        else if (errno != EAGAIN && errno != EWOULDBLOCK) {
                             return false;  // 发生错误
                         }
                     }
@@ -190,15 +188,18 @@ bool EpollNetworkModel::handleRead() {
                     std::string message(buffer.begin(), buffer.begin() + bytes_read);
                     if (auto msg = protocol::MessageFactory::parseMessage(message)) {
                         message_queue_.push(std::move(msg));
-                    } else {
+                    }
+                    else {
                         handleError(fmt::format("Message parse failed"));
                         return false;  // 消息解析失败
                     }
                 }
             }
-        } else if (n == 0) {
+        }
+        else if (n == 0) {
             return false;  // 连接关闭
-        } else {
+        }
+        else {
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
                 return true;  // 暂无数据
             }
@@ -214,7 +215,8 @@ bool EpollNetworkModel::handleWrite() {
         ssize_t n = write(socket_fd_, data.c_str(), data.size());
         if (n > 0) {
             write_queue_.pop();
-        } else if (n == -1) {
+        }
+        else if (n == -1) {
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
                 return true;  // 写缓冲区已满
             }
@@ -267,4 +269,4 @@ void EpollNetworkModel::handleError(std::string_view error_msg) {
     common::EventBus::getInstance().publish(error_event);
 }
 
-} // namespace network
+}  // namespace network

@@ -1,9 +1,9 @@
 #pragma once
 
-#include <string>
-#include <memory>
-#include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/spdlog.h>
+#include <memory>
+#include <string>
 
 // 声明 extractFileName 函数
 std::string extractFileName(const std::string& path);
@@ -15,8 +15,7 @@ private:
     std::shared_ptr<spdlog::logger> consoleLogger;
 
     // 私有构造函数，防止外部实例化
-    Logger()
-    {
+    Logger() {
         // 创建控制台日志记录器
         consoleLogger = spdlog::stdout_color_mt("console");
     }
@@ -27,14 +26,13 @@ private:
 
 public:
     // 获取唯一实例的静态方法
-    static Logger& getInstance()
-    {
+    static Logger& getInstance() {
         static Logger instance;
         return instance;
     }
 
     // 封装 info 级别的日志记录函数，支持格式化
-    template<typename... Args>
+    template <typename... Args>
     void info(const char* file, int line, const char* fmt, Args&&... args) {
         if (consoleLogger) {
             std::string fileName = extractFileName(file);
@@ -43,7 +41,7 @@ public:
     }
 
     // 实现 warn 级别的日志记录函数，支持格式化
-    template<typename... Args>
+    template <typename... Args>
     void warn(const char* file, int line, const char* fmt, Args&&... args) {
         if (consoleLogger) {
             std::string fileName = extractFileName(file);
@@ -52,7 +50,7 @@ public:
     }
 
     // 实现 error 级别的日志记录函数，支持格式化
-    template<typename... Args>
+    template <typename... Args>
     void error(const char* file, int line, const char* fmt, Args&&... args) {
         if (consoleLogger) {
             std::string fileName = extractFileName(file);

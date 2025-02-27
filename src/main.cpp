@@ -1,30 +1,26 @@
-#include "application/x30_inspection_system.hpp"
+#include <chrono>
 #include <iostream>
 #include <ostream>
 #include <thread>
-#include <chrono>
+#include "application/x30_inspection_system.hpp"
 #include "common/event_bus.hpp"
 #include "protocol/x30_protocol.hpp"
 // #include <fmt/core.h>
-#include "common/utils.hpp"
 #include "common/logger.hpp"
+#include "common/utils.hpp"
 // #include "common/Logger.hpp"
 namespace x30 {
 
 std::atomic<bool> program_running_(true);
 // 命令处理结果
-enum class CommandResult {
-    SUCCESS,
-    CONTINUE,
-    EXIT
-};
+enum class CommandResult { SUCCESS, CONTINUE, EXIT };
 
 // std::unordered_map<int, protocol::NavigationPoint> point_map_ = common::loadNavigationPointsMap();
 
 class InspectionApp {
 public:
-
-    explicit InspectionApp() : system_(std::make_unique<application::X30InspectionSystem>()) {}
+    explicit InspectionApp() : system_(std::make_unique<application::X30InspectionSystem>()) {
+    }
     ~InspectionApp() = default;
 
     // 初始化应用程序
@@ -84,67 +80,61 @@ private:
         });
 
         // 订阅导航任务事件
-        common::EventBus::getInstance().subscribe<common::NavigationTaskEvent>(
-            [](const std::shared_ptr<common::Event>&) {
-                // auto taskEvent = std::static_pointer_cast<common::NavigationTaskEvent>(event);
-                // spdlog::info("[{}]: 导航任务执行状态: {}", common::getCurrentTimestamp(), taskEvent->status);
-                // std::cout << fmt::format("[{}]: 导航任务执行状态: {}", common::getCurrentTimestamp(), taskEvent->status) << std::endl;
-                // common::Logger::getInstance().info(__FILE__, __LINE__, "导航任务执行状态: {}", taskEvent->status);
-            }
-        );
+        common::EventBus::getInstance().subscribe<common::NavigationTaskEvent>([](const std::shared_ptr<
+                                                                                   common::Event>&) {
+            // auto taskEvent = std::static_pointer_cast<common::NavigationTaskEvent>(event);
+            // spdlog::info("[{}]: 导航任务执行状态: {}", common::getCurrentTimestamp(), taskEvent->status);
+            // std::cout << fmt::format("[{}]: 导航任务执行状态: {}", common::getCurrentTimestamp(), taskEvent->status) << std::endl;
+            // common::Logger::getInstance().info(__FILE__, __LINE__, "导航任务执行状态: {}", taskEvent->status);
+        });
 
         // 订阅状态查询消息响应事件
-        common::EventBus::getInstance().subscribe<common::QueryStatusEvent>(
-            [](const std::shared_ptr<common::Event>&) {
-                // auto queryEvent = std::static_pointer_cast<common::QueryStatusEvent>(event);
-                // if (queryEvent->status == protocol::NavigationStatus::EXECUTING) {
-                //     static int lastValue = 0;
-                //     if (lastValue != queryEvent->value) {
-                //         lastValue = queryEvent->value;
-                //         auto&& point = point_map_[queryEvent->value];
-                //         spdlog::info("[{}]: 正在前往点位 {}， 目标点类型: {}，点位坐标: [{}, {}, {}]  ********************************",
-                //             common::getCurrentTimestamp(), queryEvent->value, common::convertPointType(point.pointInfo), point.posX, point.posY, point.posZ);
-                //         // std::cout << fmt::format("[{}]: 正在前往点位 {}， 目标点类型: {}，点位坐标: [{}, {}, {}] ********************************",
-                //         //     common::getCurrentTimestamp(), queryEvent->value, common::convertPointType(point.pointInfo), point.posX, point.posY, point.posZ) << std::endl;
-                //         // common::Logger::getInstance().info(__FILE__, __LINE__, "正在前往点位 {}， 目标点类型: {}，点位坐标: [{}, {}, {}]", queryEvent->value, common::convertPointType(point.pointInfo), point.posX, point.posY, point.posZ);
-                //     }
-                // }
-                // else if (queryEvent->status == protocol::NavigationStatus::FAILED) {
-                //     spdlog::error("[{}]: 查询到设备运行状态异常, status: {}", common::getCurrentTimestamp(), static_cast<int>(queryEvent->status));
-                //     // std::cout << fmt::format("[{}]: 查询到设备运行状态异常, status: {} ********************************",
-                //     //     common::getCurrentTimestamp(), queryEvent->status) << std::endl;
-                //     // common::Logger::getInstance().info(__FILE__, __LINE__, "查询到设备运行状态异常, status: {}", queryEvent->status);
-                // }
-                // else if (queryEvent->status == protocol::NavigationStatus::COMPLETED) {
-                //     spdlog::info("[{}]: 查询到导航任务执行完成, status: {}", common::getCurrentTimestamp(), static_cast<int>(queryEvent->status));
-                //     // std::cout << fmt::format("[{}]: 查询到导航任务执行完成, status: {} ********************************",
-                //     //     common::getCurrentTimestamp(), queryEvent->status) << std::endl;
-                //     // common::Logger::getInstance().info(__FILE__, __LINE__, "查询到导航任务执行完成, status: {}", queryEvent->status);
-                // }
-            }
-        );
+        common::EventBus::getInstance().subscribe<common::QueryStatusEvent>([](const std::shared_ptr<common::Event>&) {
+            // auto queryEvent = std::static_pointer_cast<common::QueryStatusEvent>(event);
+            // if (queryEvent->status == protocol::NavigationStatus::EXECUTING) {
+            //     static int lastValue = 0;
+            //     if (lastValue != queryEvent->value) {
+            //         lastValue = queryEvent->value;
+            //         auto&& point = point_map_[queryEvent->value];
+            //         spdlog::info("[{}]: 正在前往点位 {}， 目标点类型: {}，点位坐标: [{}, {}, {}]  ********************************",
+            //             common::getCurrentTimestamp(), queryEvent->value, common::convertPointType(point.pointInfo), point.posX, point.posY, point.posZ);
+            //         // std::cout << fmt::format("[{}]: 正在前往点位 {}， 目标点类型: {}，点位坐标: [{}, {}, {}] ********************************",
+            //         //     common::getCurrentTimestamp(), queryEvent->value, common::convertPointType(point.pointInfo), point.posX, point.posY, point.posZ) << std::endl;
+            //         // common::Logger::getInstance().info(__FILE__, __LINE__, "正在前往点位 {}， 目标点类型: {}，点位坐标: [{}, {}, {}]", queryEvent->value, common::convertPointType(point.pointInfo), point.posX, point.posY, point.posZ);
+            //     }
+            // }
+            // else if (queryEvent->status == protocol::NavigationStatus::FAILED) {
+            //     spdlog::error("[{}]: 查询到设备运行状态异常, status: {}", common::getCurrentTimestamp(), static_cast<int>(queryEvent->status));
+            //     // std::cout << fmt::format("[{}]: 查询到设备运行状态异常, status: {} ********************************",
+            //     //     common::getCurrentTimestamp(), queryEvent->status) << std::endl;
+            //     // common::Logger::getInstance().info(__FILE__, __LINE__, "查询到设备运行状态异常, status: {}", queryEvent->status);
+            // }
+            // else if (queryEvent->status == protocol::NavigationStatus::COMPLETED) {
+            //     spdlog::info("[{}]: 查询到导航任务执行完成, status: {}", common::getCurrentTimestamp(), static_cast<int>(queryEvent->status));
+            //     // std::cout << fmt::format("[{}]: 查询到导航任务执行完成, status: {} ********************************",
+            //     //     common::getCurrentTimestamp(), queryEvent->status) << std::endl;
+            //     // common::Logger::getInstance().info(__FILE__, __LINE__, "查询到导航任务执行完成, status: {}", queryEvent->status);
+            // }
+        });
 
         // 订阅实时状态消息响应事件
-        common::EventBus::getInstance().subscribe<common::GetRealTimeStatusEvent>(
-            [](const std::shared_ptr<common::Event>&) {
-                // auto realTimeEvent = std::static_pointer_cast<common::GetRealTimeStatusEvent>(event);
-                // spdlog::info("[{}]: 当前位置坐标: [{}, {}, {}]，累计里程数：{}, 机器人定位状态: {}",
-                //     common::getCurrentTimestamp(), realTimeEvent->posX, realTimeEvent->posY, realTimeEvent->posZ, realTimeEvent->sumOdom, realTimeEvent->location);
-                // std::cout << fmt::format("[{}]: 当前位置坐标: [{}, {}, {}]，累计里程数：{}, 机器人定位状态: {}",
-                // common::getCurrentTimestamp(), realTimeEvent->posX, realTimeEvent->posY, realTimeEvent->posZ, realTimeEvent->sumOdom, realTimeEvent->location) << std::endl;
-                // common::Logger::getInstance().info(__FILE__, __LINE__, "当前位置坐标: [{}, {}, {}]，累计里程数：{}, 机器人定位状态: {}", realTimeEvent->posX, realTimeEvent->posY, realTimeEvent->posZ, realTimeEvent->sumOdom, realTimeEvent->location);
-            }
-        );
+        common::EventBus::getInstance().subscribe<common::GetRealTimeStatusEvent>([](const std::shared_ptr<
+                                                                                      common::Event>&) {
+            // auto realTimeEvent = std::static_pointer_cast<common::GetRealTimeStatusEvent>(event);
+            // spdlog::info("[{}]: 当前位置坐标: [{}, {}, {}]，累计里程数：{}, 机器人定位状态: {}",
+            //     common::getCurrentTimestamp(), realTimeEvent->posX, realTimeEvent->posY, realTimeEvent->posZ, realTimeEvent->sumOdom, realTimeEvent->location);
+            // std::cout << fmt::format("[{}]: 当前位置坐标: [{}, {}, {}]，累计里程数：{}, 机器人定位状态: {}",
+            // common::getCurrentTimestamp(), realTimeEvent->posX, realTimeEvent->posY, realTimeEvent->posZ, realTimeEvent->sumOdom, realTimeEvent->location) << std::endl;
+            // common::Logger::getInstance().info(__FILE__, __LINE__, "当前位置坐标: [{}, {}, {}]，累计里程数：{}, 机器人定位状态: {}", realTimeEvent->posX, realTimeEvent->posY, realTimeEvent->posZ, realTimeEvent->sumOdom, realTimeEvent->location);
+        });
 
         // 订阅错误事件
-        common::EventBus::getInstance().subscribe<common::ErrorEvent>(
-            [](const std::shared_ptr<common::Event>&) {
-                // auto errorEvent = std::static_pointer_cast<common::ErrorEvent>(event);
-                // spdlog::error("[{}]: 错误 [{}]: {}", common::getCurrentTimestamp(), errorEvent->code, errorEvent->message);
-                // std::cout << fmt::format("[{}]: 错误 [{}]: {}", common::getCurrentTimestamp(), errorEvent->code, errorEvent->message) << std::endl;
-                // common::Logger::getInstance().info(__FILE__, __LINE__, "错误 [{}]: {}", errorEvent->code, errorEvent->message);
-            }
-        );
+        common::EventBus::getInstance().subscribe<common::ErrorEvent>([](const std::shared_ptr<common::Event>&) {
+            // auto errorEvent = std::static_pointer_cast<common::ErrorEvent>(event);
+            // spdlog::error("[{}]: 错误 [{}]: {}", common::getCurrentTimestamp(), errorEvent->code, errorEvent->message);
+            // std::cout << fmt::format("[{}]: 错误 [{}]: {}", common::getCurrentTimestamp(), errorEvent->code, errorEvent->message) << std::endl;
+            // common::Logger::getInstance().info(__FILE__, __LINE__, "错误 [{}]: {}", errorEvent->code, errorEvent->message);
+        });
     }
 
     // 等待连接建立
@@ -169,7 +159,8 @@ private:
             return CommandResult::CONTINUE;
         }
         else {
-            spdlog::warn("[{}]: [InspectionApp:WRN]: 未知命令，输入 'help' 查看可用命令\n", common::getCurrentTimestamp());
+            spdlog::warn("[{}]: [InspectionApp:WRN]: 未知命令，输入 'help' 查看可用命令\n",
+                         common::getCurrentTimestamp());
             // std::cout << "未知命令，输入 'help' 查看可用命令\n";
             return CommandResult::CONTINUE;
         }
@@ -177,7 +168,10 @@ private:
 
     // 打印帮助信息
     static void printHelp() {
-        spdlog::info("[{}]: [InspectionApp:INFO]: 可用命令：\n1. start - 开始巡检任务\n2. cancel - 取消巡检任务\n3. status - 查询状态\n4. help - 显示此帮助信息\n5. quit - 退出程序\n", common::getCurrentTimestamp());
+        spdlog::info(
+            "[{}]: [InspectionApp:INFO]: 可用命令：\n1. start - 开始巡检任务\n2. cancel - 取消巡检任务\n3. status - "
+            "查询状态\n4. help - 显示此帮助信息\n5. quit - 退出程序\n",
+            common::getCurrentTimestamp());
         // std::cout << "可用命令：\n"
         //           << "1. start - 开始巡检任务\n"
         //           << "2. cancel - 取消巡检任务\n"
@@ -190,12 +184,12 @@ private:
     std::unique_ptr<application::X30InspectionSystem> system_;
 };
 
-} // namespace x30
+}  // namespace x30
 
 int main(int argc, char* argv[]) {
     // 初始化日志
     common::Logger::init();
-    
+
     try {
         if (argc != 3) {
             spdlog::error("[{}]: 用法: {} <host> <port>", common::getCurrentTimestamp(), argv[0]);

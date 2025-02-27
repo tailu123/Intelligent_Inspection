@@ -1,9 +1,9 @@
 #pragma once
-#include <queue>
-#include <mutex>
-#include <condition_variable>
-#include "protocol/x30_protocol.hpp"
 #include <atomic>
+#include <condition_variable>
+#include <mutex>
+#include <queue>
+#include "protocol/x30_protocol.hpp"
 
 namespace common {
 
@@ -29,4 +29,4 @@ private:
     std::atomic<bool> close_flag_{false};
 };
 
-} // namespace common
+}  // namespace common

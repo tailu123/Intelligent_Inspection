@@ -1,21 +1,25 @@
 #pragma once
 
-#include "state/base_state.hpp"
-#include "protocol/x30_protocol.hpp"
 #include <memory>
 #include "common/message_queue.hpp"
 #include "common/utils.hpp"
+#include "protocol/x30_protocol.hpp"
+#include "state/base_state.hpp"
 // #include <fmt/core.h>
 #include <spdlog/spdlog.h>
 namespace state {
 
 // 状态定义
 struct Init : BaseState<Init> {
-    const char* get_state_name() const override { return "初始化"; }
+    const char* get_state_name() const override {
+        return "初始化";
+    }
 };
 
 struct PrepareEnterNav : BaseState<PrepareEnterNav> {
-    const char* get_state_name() const override { return "准备导航"; }
+    const char* get_state_name() const override {
+        return "准备导航";
+    }
 };
 
 struct Nav : public boost::msm::front::state<> {
@@ -44,4 +48,4 @@ struct Done : public boost::msm::front::terminate_state<> {
         fsm.on_terminate();
     }
 };
-} // namespace state
+}  // namespace state

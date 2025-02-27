@@ -4,10 +4,9 @@
 
 namespace common {
 class MessageQueue;
-} // namespace common
+}  // namespace common
 
-namespace state
-{
+namespace state {
 // 导航上下文
 struct NavigationContext {
     // MessageQueue保持依赖注入

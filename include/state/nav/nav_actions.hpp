@@ -1,7 +1,6 @@
 #pragma once
 
-namespace state
-{
+namespace state {
 struct NavigationContext;
 
 // Action包装器
@@ -12,6 +11,7 @@ public:
     void operator()(EVT const&, FSM& fsm, SourceState&, TargetState&) {
         execute(fsm.context_);
     }
+
 private:
     void execute(state::NavigationContext& context);
 };
@@ -23,8 +23,9 @@ public:
     void operator()(EVT const&, FSM& fsm, SourceState&, TargetState&) {
         execute(fsm.context_);
     }
+
 private:
     void execute(state::NavigationContext& context);
 };
 
-}   // namespace state
+}  // namespace state

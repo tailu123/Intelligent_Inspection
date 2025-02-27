@@ -5,10 +5,8 @@
 
 namespace network {
 
-std::shared_ptr<BaseNetworkModel> NetworkModelFactory::createNetworkModel(
-    NetworkModelType type,
-    common::MessageQueue& message_queue)
-{
+std::shared_ptr<BaseNetworkModel> NetworkModelFactory::createNetworkModel(NetworkModelType type,
+                                                                          common::MessageQueue& message_queue) {
     switch (type) {
         case NetworkModelType::ASIO:
             return std::make_unique<AsioNetworkModel>(message_queue);
@@ -24,4 +22,4 @@ std::shared_ptr<BaseNetworkModel> NetworkModelFactory::createNetworkModel(
     }
 }
 
-} // namespace network
+}  // namespace network

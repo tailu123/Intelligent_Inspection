@@ -1,11 +1,10 @@
 #include "procedure/nav_procedure/nav_procedure.hpp"
-#include "state/nav/nav_context.hpp"
-#include "state/nav/nav_machine.hpp"
 #include <iostream>
 #include <memory>
-#include "common/utils.hpp"
 #include "common/event_bus.hpp"
 #include "common/utils.hpp"
+#include "state/nav/nav_context.hpp"
+#include "state/nav/nav_machine.hpp"
 // #include <fmt/core.h>
 #include <spdlog/spdlog.h>
 
@@ -15,13 +14,10 @@ NavigationProcedure::NavigationProcedure(state::NavigationContext context) {
     state_machine_ = std::make_unique<state::NavigationMachine>(std::move(context));
 
     // 设置状态机终止回调
-    state_machine_->set_terminate_callback([this]() {
-        stopStatusQuery();
-    });
+    state_machine_->set_terminate_callback([this]() { stopStatusQuery(); });
 }
 
-NavigationProcedure::~NavigationProcedure()
-{
+NavigationProcedure::~NavigationProcedure() {
     stopStatusQuery();
 }
 
@@ -85,4 +81,4 @@ void NavigationProcedure::stopStatusQuery() {
     }
 }
 
-} // namespace procedure
+}  // namespace procedure

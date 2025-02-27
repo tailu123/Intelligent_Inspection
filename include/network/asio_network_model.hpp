@@ -1,14 +1,13 @@
 #pragma once
 
-#include "network/base_network_model.hpp"
 #include <boost/asio.hpp>
 #include <queue>
+#include "network/base_network_model.hpp"
 #include "protocol/protocol_header.hpp"
 
-namespace common
-{
+namespace common {
 class MessageQueue;
-} // namespace common
+}  // namespace common
 
 namespace network {
 class AsioNetworkModel : public BaseNetworkModel, public std::enable_shared_from_this<AsioNetworkModel> {
@@ -21,6 +20,7 @@ public:
     bool isConnected() const override;
 
     void sendMessage(const protocol::IMessage& message) override;
+
 private:
     bool doConnect(const boost::asio::ip::tcp::endpoint& endpoint);
     void doRead();

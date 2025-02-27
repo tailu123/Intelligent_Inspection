@@ -1,12 +1,12 @@
 #pragma once
 
 #include <string>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 namespace protocol {
 struct NavigationPoint;
-} // namespace protocol
+}  // namespace protocol
 
 namespace common {
 
@@ -23,4 +23,4 @@ std::unordered_map<int, protocol::NavigationPoint> loadNavigationPointsMap();
 
 // 转换目标点类型
 std::string convertPointType(int pointType);
-} // namespace common
+}  // namespace common

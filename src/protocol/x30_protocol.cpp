@@ -1,10 +1,10 @@
 #include "protocol/x30_protocol.hpp"
-#include <ctime>
-#include <sstream>
-#include <iostream>
-#include "protocol/protocol_header.hpp"
-#include "common/utils.hpp"
 #include <spdlog/spdlog.h>
+#include <ctime>
+#include <iostream>
+#include <sstream>
+#include "common/utils.hpp"
+#include "protocol/protocol_header.hpp"
 
 namespace {
 constexpr size_t HEADER_SIZE = 16;
@@ -44,13 +44,16 @@ bool GetRealTimeStatusRequest::deserialize(const std::string& xml) {
     try {
         doc.parse<rapidxml::parse_non_destructive>(const_cast<char*>(xml.c_str()));
         auto root = doc.first_node("PatrolDevice");
-        if (!root) return false;
+        if (!root)
+            return false;
 
         auto timeNode = root->first_node("Time");
-        if (timeNode) timestamp = timeNode->value();
+        if (timeNode)
+            timestamp = timeNode->value();
 
         return true;
-    } catch (const rapidxml::parse_error& e) {
+    }
+    catch (const rapidxml::parse_error& e) {
         return false;
     }
 }
@@ -93,15 +96,15 @@ bool NavigationTaskRequest::deserialize(const std::string& xml) {
         doc.parse<rapidxml::parse_non_destructive>(const_cast<char*>(xml.c_str()));
 
         auto root = doc.first_node("PatrolDevice");
-        if (!root) return false;
+        if (!root)
+            return false;
 
         auto timeNode = root->first_node("Time");
-        if (timeNode) timestamp = timeNode->value();
+        if (timeNode)
+            timestamp = timeNode->value();
 
         points.clear();
-        for (auto itemNode = root->first_node("Items");
-             itemNode;
-             itemNode = itemNode->next_sibling("Items")) {
+        for (auto itemNode = root->first_node("Items"); itemNode; itemNode = itemNode->next_sibling("Items")) {
             NavigationPoint point;
 
             auto getValue = [](rapidxml::xml_node<>* parent, const char* name) -> std::string {
@@ -128,9 +131,11 @@ bool NavigationTaskRequest::deserialize(const std::string& xml) {
         }
 
         return true;
-    } catch (const rapidxml::parse_error& e) {
+    }
+    catch (const rapidxml::parse_error& e) {
         return false;
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception& e) {
         return false;
     }
 }
@@ -153,13 +158,16 @@ bool CancelTaskRequest::deserialize(const std::string& xml) {
     try {
         doc.parse<rapidxml::parse_non_destructive>(const_cast<char*>(xml.c_str()));
         auto root = doc.first_node("PatrolDevice");
-        if (!root) return false;
+        if (!root)
+            return false;
 
         auto timeNode = root->first_node("Time");
-        if (timeNode) timestamp = timeNode->value();
+        if (timeNode)
+            timestamp = timeNode->value();
 
         return true;
-    } catch (const rapidxml::parse_error& e) {
+    }
+    catch (const rapidxml::parse_error& e) {
         return false;
     }
 }
@@ -182,13 +190,16 @@ bool QueryStatusRequest::deserialize(const std::string& xml) {
     try {
         doc.parse<rapidxml::parse_non_destructive>(const_cast<char*>(xml.c_str()));
         auto root = doc.first_node("PatrolDevice");
-        if (!root) return false;
+        if (!root)
+            return false;
 
         auto timeNode = root->first_node("Time");
-        if (timeNode) timestamp = timeNode->value();
+        if (timeNode)
+            timestamp = timeNode->value();
 
         return true;
-    } catch (const rapidxml::parse_error& e) {
+    }
+    catch (const rapidxml::parse_error& e) {
         return false;
     }
 }
@@ -234,13 +245,16 @@ bool GetRealTimeStatusResponse::deserialize(const std::string& xml) {
     try {
         doc.parse<rapidxml::parse_non_destructive>(const_cast<char*>(xml.c_str()));
         auto root = doc.first_node("PatrolDevice");
-        if (!root) return false;
+        if (!root)
+            return false;
 
         auto timeNode = root->first_node("Time");
-        if (timeNode) timestamp = timeNode->value();
+        if (timeNode)
+            timestamp = timeNode->value();
 
         auto itemsNode = root->first_node("Items");
-        if (!itemsNode) return false;
+        if (!itemsNode)
+            return false;
 
         auto getValue = [](rapidxml::xml_node<>* parent, const char* name) -> std::string {
             auto node = parent->first_node(name);
@@ -275,7 +289,8 @@ bool GetRealTimeStatusResponse::deserialize(const std::string& xml) {
         mapUpdateState = std::stoi(getValue(itemsNode, "MapUpdateState"));
 
         return true;
-    } catch (const rapidxml::parse_error& e) {
+    }
+    catch (const rapidxml::parse_error& e) {
         return false;
     }
 }
@@ -302,25 +317,31 @@ bool NavigationTaskResponse::deserialize(const std::string& xml) {
     try {
         doc.parse<rapidxml::parse_non_destructive>(const_cast<char*>(xml.c_str()));
         auto root = doc.first_node("PatrolDevice");
-        if (!root) return false;
+        if (!root)
+            return false;
 
         auto timeNode = root->first_node("Time");
-        if (timeNode) timestamp = timeNode->value();
+        if (timeNode)
+            timestamp = timeNode->value();
 
         auto itemsNode = root->first_node("Items");
         if (itemsNode) {
             auto valueNode = itemsNode->first_node("Value");
-            if (valueNode) value = std::stoi(valueNode->value());
+            if (valueNode)
+                value = std::stoi(valueNode->value());
 
             auto errorCodeNode = itemsNode->first_node("ErrorCode");
-            if (errorCodeNode) errorCode = static_cast<ErrorCode>(std::stoi(errorCodeNode->value()));
+            if (errorCodeNode)
+                errorCode = static_cast<ErrorCode>(std::stoi(errorCodeNode->value()));
 
             auto errorStatusNode = itemsNode->first_node("ErrorStatus");
-            if (errorStatusNode) errorStatus = std::stoi(errorStatusNode->value());
+            if (errorStatusNode)
+                errorStatus = std::stoi(errorStatusNode->value());
         }
 
         return true;
-    } catch (const rapidxml::parse_error& e) {
+    }
+    catch (const rapidxml::parse_error& e) {
         return false;
     }
 }
@@ -345,19 +366,23 @@ bool CancelTaskResponse::deserialize(const std::string& xml) {
     try {
         doc.parse<rapidxml::parse_non_destructive>(const_cast<char*>(xml.c_str()));
         auto root = doc.first_node("PatrolDevice");
-        if (!root) return false;
+        if (!root)
+            return false;
 
         auto timeNode = root->first_node("Time");
-        if (timeNode) timestamp = timeNode->value();
+        if (timeNode)
+            timestamp = timeNode->value();
 
         auto itemsNode = root->first_node("Items");
         if (itemsNode) {
             auto errorCodeNode = itemsNode->first_node("ErrorCode");
-            if (errorCodeNode) errorCode = static_cast<ErrorCode>(std::stoi(errorCodeNode->value()));
+            if (errorCodeNode)
+                errorCode = static_cast<ErrorCode>(std::stoi(errorCodeNode->value()));
         }
 
         return true;
-    } catch (const rapidxml::parse_error& e) {
+    }
+    catch (const rapidxml::parse_error& e) {
         return false;
     }
 }
@@ -384,25 +409,31 @@ bool QueryStatusResponse::deserialize(const std::string& xml) {
     try {
         doc.parse<rapidxml::parse_non_destructive>(const_cast<char*>(xml.c_str()));
         auto root = doc.first_node("PatrolDevice");
-        if (!root) return false;
+        if (!root)
+            return false;
 
         auto timeNode = root->first_node("Time");
-        if (timeNode) timestamp = timeNode->value();
+        if (timeNode)
+            timestamp = timeNode->value();
 
         auto itemsNode = root->first_node("Items");
         if (itemsNode) {
             auto valueNode = itemsNode->first_node("Value");
-            if (valueNode) value = std::stoi(valueNode->value());
+            if (valueNode)
+                value = std::stoi(valueNode->value());
 
             auto statusNode = itemsNode->first_node("Status");
-            if (statusNode) status = static_cast<NavigationStatus>(std::stoi(statusNode->value()));
+            if (statusNode)
+                status = static_cast<NavigationStatus>(std::stoi(statusNode->value()));
 
             auto errorCodeNode = itemsNode->first_node("ErrorCode");
-            if (errorCodeNode) errorCode = static_cast<ErrorCode>(std::stoi(errorCodeNode->value()));
+            if (errorCodeNode)
+                errorCode = static_cast<ErrorCode>(std::stoi(errorCodeNode->value()));
         }
 
         return true;
-    } catch (const rapidxml::parse_error& e) {
+    }
+    catch (const rapidxml::parse_error& e) {
         return false;
     }
 }
@@ -411,7 +442,8 @@ bool QueryStatusResponse::deserialize(const std::string& xml) {
 std::unique_ptr<IMessage> MessageFactory::createMessage(MessageType type) {
     if (static_cast<int>(type) >= 2000) {
         return createResponseMessage(type);
-    } else {
+    }
+    else {
         return createRequestMessage(type);
     }
 }
@@ -439,8 +471,7 @@ std::unique_ptr<IMessage> MessageFactory::createResponseMessage(MessageType type
             return std::make_unique<QueryStatusResponse>();
         case MessageType::GET_REAL_TIME_STATUS_RESP:
             return std::make_unique<GetRealTimeStatusResponse>();
-        default:
-        {
+        default: {
             spdlog::error("[{}]: [Protocol:ERR]: 无法处理当前消息类型", common::getCurrentTimestamp());
             // std::cout << "error type " << std::endl;
             return nullptr;
@@ -454,15 +485,18 @@ std::unique_ptr<IMessage> MessageFactory::parseMessage(const std::string& xml) {
         doc.parse<rapidxml::parse_non_destructive>(const_cast<char*>(xml.c_str()));
 
         auto root = doc.first_node("PatrolDevice");
-        if (!root) return nullptr;
+        if (!root)
+            return nullptr;
 
         auto typeNode = root->first_node("Type");
-        if (!typeNode) return nullptr;
+        if (!typeNode)
+            return nullptr;
         auto message = createMessage(static_cast<MessageType>(std::stoi(typeNode->value()) + 1000));
         if (message && message->deserialize(xml)) {
             return message;
         }
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception& e) {
         std::cerr << "Failed to parse message: " << e.what() << std::endl;
     }
     return nullptr;
@@ -489,8 +523,11 @@ std::ostream& operator<<(std::ostream& os, const NavigationStatus& status) {
 
 // 打印NavigationPoint
 std::ostream& operator<<(std::ostream& os, const NavigationPoint& point) {
-    os << "NavigationPoint: " << point.mapId << ", " << point.value << ", " << point.posX << ", " << point.posY << ", " << point.posZ << ", " << point.angleYaw << ", " << point.pointInfo << ", " << point.gait << ", " << point.speed << ", " << point.manner << ", " << point.obsMode << ", " << point.navMode << ", " << point.terrain << ", " << point.posture;
+    os << "NavigationPoint: " << point.mapId << ", " << point.value << ", " << point.posX << ", " << point.posY << ", "
+       << point.posZ << ", " << point.angleYaw << ", " << point.pointInfo << ", " << point.gait << ", " << point.speed
+       << ", " << point.manner << ", " << point.obsMode << ", " << point.navMode << ", " << point.terrain << ", "
+       << point.posture;
     return os;
 }
 
-} // namespace protocol
+}  // namespace protocol

@@ -33,4 +33,4 @@ void MessageQueue::close() {
     close_flag_ = true;
 }
 
-} // namespace common
+}  // namespace common

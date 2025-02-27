@@ -2,15 +2,14 @@
 
 namespace protocol {
 class IMessage;
-} // namespace protocol
+}  // namespace protocol
 namespace procedure {
 
-class BaseProcedure
-{
+class BaseProcedure {
 public:
     virtual ~BaseProcedure() = default;
     virtual void start() = 0;
     virtual void process_event(const protocol::IMessage& message) = 0;
 };
 
-} // namespace procedure
+}  // namespace procedure

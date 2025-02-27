@@ -36,10 +36,11 @@ void EventBus::publish(const std::shared_ptr<Event>& event, const std::string& h
             handler->second(event);
         }
         else {
-            spdlog::warn("[{}]: [EventBus:WRN]: 找不到事件处理函数: {}, handlerId={}", common::getCurrentTimestamp(), event->getType(), handlerId);
+            spdlog::warn("[{}]: [EventBus:WRN]: 找不到事件处理函数: {}, handlerId={}", common::getCurrentTimestamp(),
+                         event->getType(), handlerId);
             // std::cout << fmt::format("[{}]: 找不到事件处理函数: {}, handlerId={}", common::getCurrentTimestamp(), event->getType(), handlerId) << std::endl;
         }
     }
 }
 
-} // namespace common
+}  // namespace common

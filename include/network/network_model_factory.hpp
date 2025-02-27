@@ -1,25 +1,19 @@
 #pragma once
 #include <memory>
 
-namespace common
-{
+namespace common {
 class MessageQueue;
-} // namespace common
+}  // namespace common
 
 namespace network {
 
 class BaseNetworkModel;
-enum class NetworkModelType {
-    ASIO,
-    EPOLL,
-    LIBHV
-};
+enum class NetworkModelType { ASIO, EPOLL, LIBHV };
 
 class NetworkModelFactory {
 public:
-    static std::shared_ptr<BaseNetworkModel> createNetworkModel(
-        NetworkModelType type,
-        common::MessageQueue& message_queue);
+    static std::shared_ptr<BaseNetworkModel> createNetworkModel(NetworkModelType type,
+                                                                common::MessageQueue& message_queue);
 };
 
-} // namespace network
+}  // namespace network
