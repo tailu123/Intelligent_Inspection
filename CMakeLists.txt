@@ -43,7 +43,6 @@ set(SOURCES
     src/common/utils.cpp
     src/state/nav/nav_actions.cpp
     src/state/nav/nav_guards.cpp
-    src/common/Logger.cpp
 )
 
 # 创建主可执行文件

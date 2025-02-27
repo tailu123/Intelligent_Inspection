@@ -4,7 +4,8 @@
 #include <boost/msm/front/state_machine_def.hpp>
 #include <iostream>
 // #include <fmt/core.h>
-#include "common/Logger.hpp"
+// #include "common/logger.hpp"
+#include <spdlog/spdlog.h>
 #include "common/utils.hpp"
 // 定义 BaseState
 template <typename Derived>

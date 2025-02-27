@@ -1,0 +1,50 @@
+/home/lutaichen/workspace/test/Intelligent_Inspection/include/state/nav/nav_machine.hpp:81:5: style: Struct 'NavigationMachine_' has a constructor with 1 argument that is not explicit. [noExplicitConstructor]
+    NavigationMachine_(NavigationContext context) : context_(std::move(context)) {
+    ^
+/home/lutaichen/workspace/test/Intelligent_Inspection/src/common/utils.cpp:38:20: style: Consider using std::transform algorithm instead of a raw loop. [useStlAlgorithm]
+            points.push_back(protocol::NavigationPoint::fromJson(jsonPoint));
+                   ^
+/home/lutaichen/workspace/test/Intelligent_Inspection/src/main.cpp:55:17: style: Condition '!program_running_' is always false [knownConditionTrueFalse]
+            if (not program_running_) {
+                ^
+/home/lutaichen/workspace/test/Intelligent_Inspection/src/main.cpp:50:16: note: Assuming that condition 'program_running_' is not redundant
+        while (program_running_) {
+               ^
+/home/lutaichen/workspace/test/Intelligent_Inspection/src/main.cpp:55:17: note: Condition '!program_running_' is always false
+            if (not program_running_) {
+                ^
+/home/lutaichen/workspace/test/Intelligent_Inspection/include/network/asio_network_model.hpp:19:10: warning: Virtual function 'disconnect' is called from destructor '~AsioNetworkModel()' at line 18. Dynamic binding is not used. [virtualCallInConstructor]
+    void disconnect() override;
+         ^
+/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/asio_network_model.cpp:18:5: note: Calling disconnect
+    disconnect();
+    ^
+/home/lutaichen/workspace/test/Intelligent_Inspection/include/network/asio_network_model.hpp:19:10: note: disconnect is a virtual function
+    void disconnect() override;
+         ^
+/home/lutaichen/workspace/test/Intelligent_Inspection/include/network/epoll_network_model.hpp:22:10: warning: Virtual function 'disconnect' is called from destructor '~EpollNetworkModel()' at line 28. Dynamic binding is not used. [virtualCallInConstructor]
+    void disconnect() override;
+         ^
+/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/epoll_network_model.cpp:28:5: note: Calling disconnect
+    disconnect();
+    ^
+/home/lutaichen/workspace/test/Intelligent_Inspection/include/network/epoll_network_model.hpp:22:10: note: disconnect is a virtual function
+    void disconnect() override;
+         ^
+/home/lutaichen/workspace/test/Intelligent_Inspection/include/network/network_model_manager.hpp:17:10: warning: Virtual function 'stop' is called from destructor '~NetworkModelManager()' at line 14. Dynamic binding is not used. [virtualCallInConstructor]
+    void stop() override;
+         ^
+/home/lutaichen/workspace/test/Intelligent_Inspection/src/network/network_model_manager.cpp:14:5: note: Calling stop
+    stop();
+    ^
+/home/lutaichen/workspace/test/Intelligent_Inspection/include/network/network_model_manager.hpp:17:10: note: stop is a virtual function
+    void stop() override;
+         ^
+/home/lutaichen/workspace/test/Intelligent_Inspection/src/procedure/nav_procedure/nav_procedure.cpp:14:5: performance: Variable 'state_machine_' is assigned in constructor body. Consider performing initialization in initialization list. [useInitializationList]
+    state_machine_ = std::make_unique<state::NavigationMachine>(std::move(context));
+    ^
+/home/lutaichen/workspace/test/Intelligent_Inspection/src/common/event_bus.cpp:8:0: style: The function 'unsubscribe' is never used. [unusedFunction]
+
+^
+nofile:0:0: information: Cppcheck cannot find all the include files (use --check-config for details) [missingInclude]
+
