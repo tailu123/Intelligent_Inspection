@@ -5,8 +5,8 @@
 #include <memory>
 #include "common/message_queue.hpp"
 #include "common/utils.hpp"
-#include <fmt/core.h>
-
+// #include <fmt/core.h>
+#include <spdlog/spdlog.h>
 namespace state {
 
 // 状态定义
@@ -23,7 +23,8 @@ struct Nav : public boost::msm::front::state<> {
     void on_entry(Event const&, FSM&) {
         static bool isfirst = true;
         if (isfirst) {
-            std::cout << fmt::format("[{}]: [NavFsm:State]: 进入导航状态", common::getCurrentTimestamp()) << std::endl;
+            spdlog::info("[{}]: [NavFsm:State]: 进入导航状态", common::getCurrentTimestamp());
+            // std::cout << fmt::format("[{}]: [NavFsm:State]: 进入导航状态", common::getCurrentTimestamp()) << std::endl;
             isfirst = false;
         }
     }
@@ -36,7 +37,8 @@ struct Nav : public boost::msm::front::state<> {
 struct Done : public boost::msm::front::terminate_state<> {
     template <class Event, class FSM>
     void on_entry(Event const&, FSM& fsm) {
-        std::cout << fmt::format("[{}]: [NavFsm:State]: 进入结束状态", common::getCurrentTimestamp()) << std::endl;
+        spdlog::info("[{}]: [NavFsm:State]: 进入结束状态", common::getCurrentTimestamp());
+        // std::cout << fmt::format("[{}]: [NavFsm:State]: 进入结束状态", common::getCurrentTimestamp()) << std::endl;
         fsm.context_.message_queue.clear();
         fsm.context_.message_queue.push(std::make_unique<protocol::ProcedureReset>());
         fsm.on_terminate();

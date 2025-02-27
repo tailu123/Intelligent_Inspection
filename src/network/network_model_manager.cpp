@@ -1,6 +1,8 @@
 #include "network/network_model_manager.hpp"
 #include "network/base_network_model.hpp"
 #include <iostream>
+#include "common/utils.hpp"
+#include <spdlog/spdlog.h>
 namespace network {
 
 
@@ -24,7 +26,8 @@ bool NetworkModelManager::start(const std::string& host, uint16_t port) {
 
         return network_model_->connect(host, port);
     } catch (const std::exception& e) {
-        std::cout << "[NetworkModelManager]: 启动失败, 错误: " << e.what() << std::endl;
+        spdlog::error("[{}]: [NetworkModelManager]: 启动失败, 错误: {}", common::getCurrentTimestamp(), e.what());
+        // std::cout << "[NetworkModelManager]: 启动失败, 错误: " << e.what() << std::endl;
         return false;
     }
 }

@@ -3,6 +3,8 @@
 #include <sstream>
 #include <iostream>
 #include "protocol/protocol_header.hpp"
+#include "common/utils.hpp"
+#include <spdlog/spdlog.h>
 
 namespace {
 constexpr size_t HEADER_SIZE = 16;
@@ -439,7 +441,8 @@ std::unique_ptr<IMessage> MessageFactory::createResponseMessage(MessageType type
             return std::make_unique<GetRealTimeStatusResponse>();
         default:
         {
-            std::cout << "error type " << std::endl;
+            spdlog::error("[{}]: [Protocol:ERR]: 无法处理当前消息类型", common::getCurrentTimestamp());
+            // std::cout << "error type " << std::endl;
             return nullptr;
         }
     }

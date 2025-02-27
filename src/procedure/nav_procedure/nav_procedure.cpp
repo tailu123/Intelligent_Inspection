@@ -6,7 +6,8 @@
 #include "common/utils.hpp"
 #include "common/event_bus.hpp"
 #include "common/utils.hpp"
-#include <fmt/core.h>
+// #include <fmt/core.h>
+#include <spdlog/spdlog.h>
 
 namespace procedure {
 
@@ -45,13 +46,14 @@ void NavigationProcedure::process_event(const protocol::IMessage& message) {
         }
         case protocol::MessageType::QUERY_STATUS_RESP: {
             auto& resp = dynamic_cast<const protocol::QueryStatusResponse&>(message);
-            auto event = common::QueryStatusEvent::fromResponse(resp);
-            common::EventBus::getInstance().publish(event);
+            // auto event = common::QueryStatusEvent::fromResponse(resp);
+            // common::EventBus::getInstance().publish(event);
             state_machine_->process_event(resp);
             break;
         }
         default: {
-            std::cout << fmt::format("[{}]: [NavProc:WRN]: 无法处理当前消息类型", common::getCurrentTimestamp()) << std::endl;
+            spdlog::warn("[{}]: [NavProc:WRN]: 无法处理当前消息类型", common::getCurrentTimestamp());
+            // std::cout << fmt::format("[{}]: [NavProc:WRN]: 无法处理当前消息类型", common::getCurrentTimestamp()) << std::endl;
             break;
         }
     }

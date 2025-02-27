@@ -27,9 +27,9 @@ public:
     // 处理用户输入的指令
     void handleCommand(const std::string& command);
 
-private:
     // 析构清理资源
     void shutdown();
+private:
 
     // 巡检任务管理
     bool startInspection();
@@ -45,16 +45,20 @@ private:
     // 消息处理循环
     void messageProcessingLoop();
 
+    // 打印日志
+    void printLog(const protocol::QueryStatusResponse& resp) const;
+    void printLog(const protocol::GetRealTimeStatusResponse& resp) const;
+
+    // 消息队列
+    common::MessageQueue message_queue_;
+    std::atomic<bool> message_queue_running_{false};
+    std::thread message_thread_;
+
     // 网络通信接口
     std::unique_ptr<network::NetworkModelManager> network_model_manager_;
 
     // 业务核心
     std::unique_ptr<procedure::BaseProcedure> nav_state_procedure_;
-
-    // 消息队列
-    common::MessageQueue message_queue_;
-    std::thread message_thread_;
-    std::atomic<bool> message_queue_running_{false};
 };
 
 } // namespace application

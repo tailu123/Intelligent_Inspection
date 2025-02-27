@@ -11,9 +11,14 @@
 #include <vector>
 #include "common/message_queue.hpp"
 #include "common/event_bus.hpp"
-#include <fmt/core.h>
+// #include <fmt/core.h>
+#include <spdlog/spdlog.h>
+#include "common/utils.hpp"
 
 namespace network {
+
+static const int MAX_EVENTS = 10;
+static const ssize_t MAX_BUFFER_SIZE = 4096;
 
 EpollNetworkModel::EpollNetworkModel(common::MessageQueue& message_queue)
     : running_(false)
@@ -25,6 +30,10 @@ EpollNetworkModel::EpollNetworkModel(common::MessageQueue& message_queue)
 
 EpollNetworkModel::~EpollNetworkModel() {
     disconnect();
+    running_ = false;
+    if (event_thread_.joinable()) {
+        event_thread_.join();
+    }
 }
 
 void EpollNetworkModel::setNonBlocking(int fd) {
@@ -78,6 +87,7 @@ bool EpollNetworkModel::connect(const std::string& host, uint16_t port) {
     }
 
     struct epoll_event ev;
+    memset(&ev, 0, sizeof(ev));
     ev.events = EPOLLIN | EPOLLET;
     ev.data.fd = socket_fd_;
     if (epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, socket_fd_, &ev) == -1) {
@@ -213,6 +223,7 @@ bool EpollNetworkModel::handleWrite() {
     }
 
     struct epoll_event ev;
+    memset(&ev, 0, sizeof(ev));
     ev.events = EPOLLIN | EPOLLET;
     ev.data.fd = socket_fd_;
     if (epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, socket_fd_, &ev) == -1) {
@@ -238,6 +249,7 @@ void EpollNetworkModel::sendMessage(const protocol::IMessage& message) {
     }
 
     struct epoll_event ev;
+    memset(&ev, 0, sizeof(ev));
     ev.events = EPOLLIN | EPOLLOUT | EPOLLET;
     ev.data.fd = socket_fd_;
     if (epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, socket_fd_, &ev) == -1) {
@@ -249,6 +261,7 @@ void EpollNetworkModel::sendMessage(const protocol::IMessage& message) {
 }
 
 void EpollNetworkModel::handleError(std::string_view error_msg) {
+    spdlog::error("[{}]: 网络错误: {}, 请检查网络连接, 程序需要重新启动", common::getCurrentTimestamp(), error_msg);
     auto error_event = std::make_shared<common::NetworkErrorEvent>();
     error_event->message = std::string{error_msg};
     common::EventBus::getInstance().publish(error_event);

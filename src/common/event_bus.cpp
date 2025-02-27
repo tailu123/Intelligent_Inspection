@@ -1,7 +1,8 @@
 #include "common/event_bus.hpp"
 #include <iostream>
 #include "common/utils.hpp"
-#include <fmt/core.h>
+// #include <fmt/core.h>
+#include <spdlog/spdlog.h>
 namespace common {
 
 void EventBus::unsubscribe(const std::string& eventType, const std::string& handlerId) {
@@ -21,7 +22,8 @@ void EventBus::publish(const std::shared_ptr<Event>& event) {
         }
     }
     else {
-        std::cout << fmt::format("[{}]: 找不到事件处理函数: {}", common::getCurrentTimestamp(), event->getType()) << std::endl;
+        spdlog::warn("[{}]: [EventBus:WRN]: 找不到事件处理函数: {}", common::getCurrentTimestamp(), event->getType());
+        // std::cout << fmt::format("[{}]: 找不到事件处理函数: {}", common::getCurrentTimestamp(), event->getType()) << std::endl;
     }
 }
 
@@ -34,7 +36,8 @@ void EventBus::publish(const std::shared_ptr<Event>& event, const std::string& h
             handler->second(event);
         }
         else {
-            std::cout << fmt::format("[{}]: 找不到事件处理函数: {}, handlerId={}", common::getCurrentTimestamp(), event->getType(), handlerId) << std::endl;
+            spdlog::warn("[{}]: [EventBus:WRN]: 找不到事件处理函数: {}, handlerId={}", common::getCurrentTimestamp(), event->getType(), handlerId);
+            // std::cout << fmt::format("[{}]: 找不到事件处理函数: {}, handlerId={}", common::getCurrentTimestamp(), event->getType(), handlerId) << std::endl;
         }
     }
 }

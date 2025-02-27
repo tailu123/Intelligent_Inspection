@@ -11,7 +11,10 @@ void MessageQueue::push(std::unique_ptr<protocol::IMessage> msg) {
 
 std::unique_ptr<protocol::IMessage> MessageQueue::pop() {
     std::unique_lock<std::mutex> lock(mutex_);
-    cv_.wait(lock, [this] { return !queue_.empty(); });
+    cv_.wait(lock, [this] { return !queue_.empty() || close_flag_; });
+    if (close_flag_ && queue_.empty()) {
+        return nullptr;
+    }
     auto msg = std::move(queue_.front());
     queue_.pop();
     return msg;
@@ -23,4 +26,11 @@ void MessageQueue::clear() {
         queue_.pop();
     }
 }
+
+void MessageQueue::close() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    cv_.notify_all();
+    close_flag_ = true;
+}
+
 } // namespace common

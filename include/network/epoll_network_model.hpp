@@ -50,9 +50,6 @@ private:
 
     std::queue<std::string> write_queue_;
     std::mutex write_mutex_;
-
-    static const ssize_t MAX_BUFFER_SIZE = 4096;
-    static const int MAX_EVENTS = 10;
 };
 
 } // namespace network

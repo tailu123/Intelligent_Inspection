@@ -15,7 +15,8 @@
 #include "state/nav/nav_actions.hpp"
 #include "state/nav/nav_guards.hpp"
 #include "state/nav/nav_states.hpp"
-#include <fmt/core.h>
+// #include <fmt/core.h>
+#include <spdlog/spdlog.h>
 #include "common/utils.hpp"
 
 namespace state {
@@ -65,7 +66,8 @@ struct NavigationMachine_ : public boost::msm::front::state_machine_def<Navigati
     // 处理未定义的转换
     template <class FSM, class Event>
     void no_transition(Event const&, FSM&, int state) {
-        std::cout << fmt::format("[{}]: [NavFsm:WRN]: 无法处理当前状态({})下的事件", common::getCurrentTimestamp(), state) << std::endl;
+        spdlog::warn("[{}]: [NavFsm:WRN]: 无法处理当前状态({})下的事件", common::getCurrentTimestamp(), state);
+        // std::cout << fmt::format("[{}]: [NavFsm:WRN]: 无法处理当前状态({})下的事件", common::getCurrentTimestamp(), state) << std::endl;
     }
 
     NavigationMachine_(NavigationContext context)

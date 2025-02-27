@@ -6,10 +6,14 @@
 #include <iostream>
 #include "common/utils.hpp"
 #include "state/nav/nav_context.hpp"
-#include <fmt/core.h>
-#include <fmt/chrono.h>
+// #include <fmt/core.h>
+#include <spdlog/spdlog.h>
+// #include <fmt/chrono.h>
 #include "common/event_bus.hpp"
 
+namespace {
+std::unordered_map<int, protocol::NavigationPoint> point_map_ = common::loadNavigationPointsMap();
+} // namespace
 namespace application {
 X30InspectionSystem::X30InspectionSystem()
     : message_queue_running_(false) {
@@ -50,14 +54,29 @@ bool X30InspectionSystem::initialize(const std::string& host, uint16_t port) {
 
 void X30InspectionSystem::shutdown() {
     try {
+        spdlog::info("[{}]: [X30InspectionSystem:INFO]: 系统关闭", common::getCurrentTimestamp());
+        // 1.先停止导航程序
+        if (nav_state_procedure_) {
+            nav_state_procedure_.reset();
+        }
+
+        // 2. 停止网络
+        if (network_model_manager_) {
+            // network_model_manager_->getNetworkModel()->disconnect();
+            network_model_manager_->stop();
+            network_model_manager_.reset();
+        }
+
+        // 3. 停止消息处理线程
         message_queue_running_ = false;
+        message_queue_.close();
         if (message_thread_.joinable()) {
             message_thread_.join();
         }
 
-        if (network_model_manager_) {
-            network_model_manager_->getNetworkModel()->disconnect();
-        }
+        // 4. 清理资源
+        // network_model_manager_.reset();
+
     } catch (const std::exception& e) {
         std::cerr << "系统关闭异常: " << e.what() << std::endl;
     }
@@ -88,6 +107,7 @@ bool X30InspectionSystem::startInspection() {
         nav_state_procedure_ = std::make_unique<procedure::NavigationProcedure>(std::move(nav_context));
         nav_state_procedure_->start();
 
+        spdlog::info("[{}]: 导航任务执行状态: 已启动", common::getCurrentTimestamp());
         std::shared_ptr<common::NavigationTaskEvent> event = std::make_shared<common::NavigationTaskEvent>();
         event->status = "已启动";
         common::EventBus::getInstance().publish(event);
@@ -106,7 +126,8 @@ bool X30InspectionSystem::cancelInspection() {
         protocol::CancelTaskRequest request;
         request.timestamp = common::getCurrentTimestamp();
         network_model_manager_->getNetworkModel()->sendMessage(request);
-        std::cout << fmt::format("[{}]: 用户触发发送1004 Request", request.timestamp) << std::endl;
+        spdlog::info("[{}]: [X30InspectionSystem:INFO]: 用户触发发送1004 Request", request.timestamp);
+        // std::cout << fmt::format("[{}]: 用户触发发送1004 Request", request.timestamp) << std::endl;
         return true;
     }
 
@@ -121,7 +142,8 @@ bool X30InspectionSystem::queryStatus() {
         protocol::QueryStatusRequest request;
         request.timestamp = common::getCurrentTimestamp();
         network_model_manager_->getNetworkModel()->sendMessage(request);
-        std::cout << fmt::format("[{}]: 用户触发发送1007 Request", request.timestamp) << std::endl;
+        spdlog::info("[{}]: [X30InspectionSystem:INFO]: 用户触发发送1007 Request", request.timestamp);
+        // std::cout << fmt::format("[{}]: 用户触发发送1007 Request", request.timestamp) << std::endl;
         return true;
     }
 
@@ -133,9 +155,11 @@ bool X30InspectionSystem::queryStatus() {
 void X30InspectionSystem::resetNavProcedure() {
     nav_state_procedure_.reset();
 
+    spdlog::info("[{}]: 导航任务执行状态: 已结束", common::getCurrentTimestamp());
     std::shared_ptr<common::NavigationTaskEvent> event = std::make_shared<common::NavigationTaskEvent>();
     event->status = "已完成";
     common::EventBus::getInstance().publish(event);
+
 }
 
 // TODO: 当业务复杂度增加时，需要增加concurrency 逻辑， 包括两种 1.消息处理 2.状态机处理
@@ -162,8 +186,9 @@ void X30InspectionSystem::messageProcessingLoop() {
                     break;
                 }
                 case protocol::MessageType::GET_REAL_TIME_STATUS_RESP: { // 实时状态响应
-                    auto event = common::GetRealTimeStatusEvent::fromResponse(
-                        dynamic_cast<const protocol::GetRealTimeStatusResponse&>(*message));
+                    auto resp = dynamic_cast<const protocol::GetRealTimeStatusResponse&>(*message);
+                    printLog(resp);
+                    auto event = common::GetRealTimeStatusEvent::fromResponse(resp);
                     common::EventBus::getInstance().publish(event);
                     break;
                 }
@@ -180,8 +205,10 @@ void X30InspectionSystem::messageProcessingLoop() {
                     break;
                 }
                 case protocol::MessageType::QUERY_STATUS_RESP: { // 状态查询响应
-                    auto event = common::QueryStatusEvent::fromResponse(
-                            dynamic_cast<const protocol::QueryStatusResponse&>(*message));
+                    auto resp = dynamic_cast<const protocol::QueryStatusResponse&>(*message);
+                    printLog(resp);
+                    auto event = common::QueryStatusEvent::fromResponse(resp);
+                    
                     common::EventBus::getInstance().publish(event);
 
                     if (nav_state_procedure_) {
@@ -199,11 +226,38 @@ void X30InspectionSystem::messageProcessingLoop() {
     }
 }
 
+void X30InspectionSystem::printLog(const protocol::QueryStatusResponse& resp) const {
+
+    if (resp.status == protocol::NavigationStatus::EXECUTING) {
+        static int lastValue = 0;
+        if (lastValue != resp.value) {
+            lastValue = resp.value;
+            auto&& point = point_map_[resp.value];
+            spdlog::info("[{}]: 正在前往点位 {}， 目标点类型: {}，点位坐标: [{.5f}, {.5f}, {.5f}]  ********************************",
+                common::getCurrentTimestamp(), resp.value, common::convertPointType(point.pointInfo), point.posX, point.posY, point.posZ);
+        }
+    }
+    else if (resp.status == protocol::NavigationStatus::FAILED) {
+        spdlog::error("[{}]: 查询到设备运行状态异常, status: {}", common::getCurrentTimestamp(), static_cast<int>(resp.status));
+    }
+    else if (resp.status == protocol::NavigationStatus::COMPLETED) {
+        spdlog::info("[{}]: 查询到导航任务执行完成, status: {}", common::getCurrentTimestamp(), static_cast<int>(resp.status));
+    }
+    
+}
+
+void X30InspectionSystem::printLog(const protocol::GetRealTimeStatusResponse& resp) const {
+    spdlog::info("[{}]: 当前位置坐标: [{.5f}, {.5f}, {.5f}]，累计里程数：{:.2f}, 机器人定位状态: {}",
+        common::getCurrentTimestamp(), resp.posX, resp.posY, resp.posZ, resp.sumOdom, resp.location);
+}
+
 void X30InspectionSystem::handleError(const std::string& error) const {
     std::shared_ptr<common::ErrorEvent> event = std::make_shared<common::ErrorEvent>();
     event->code = -1;
     event->message = error;
+    spdlog::error("[{}]: 错误 [{}]: {}", common::getCurrentTimestamp(), event->code, event->message);
     common::EventBus::getInstance().publish(event);
+
 }
 
 void X30InspectionSystem::handleCommand(const std::string& command)

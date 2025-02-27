@@ -12,6 +12,9 @@ endif()
 # 添加 libhv 子模块
 # add_subdirectory(third_party/libhv)
 
+# 添加 spdlog 子模块的源文件目录
+add_subdirectory(third_party/spdlog)
+
 # 添加编译选项
 add_compile_options(-Wall -Wextra)
 
@@ -56,6 +59,7 @@ add_executable(${PROJECT_NAME}
     src/common/utils.cpp
     src/state/nav/nav_actions.cpp
     src/state/nav/nav_guards.cpp
+    src/common/Logger.cpp
 )
 
 # 链接主程序
@@ -64,7 +68,8 @@ target_link_libraries(${PROJECT_NAME}
     ${Boost_LIBRARIES}
     pthread
     nlohmann_json::nlohmann_json
-    fmt
+    # fmt
+    spdlog::spdlog
 )
 
 # 可选：设置 C++ 编译选项

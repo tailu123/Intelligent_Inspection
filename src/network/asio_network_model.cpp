@@ -1,8 +1,9 @@
 #include "network/asio_network_model.hpp"
-#include <fmt/core.h>
+// #include <fmt/core.h>
 #include "common/message_queue.hpp"
 #include "common/event_bus.hpp"
-
+#include <spdlog/spdlog.h>
+#include "common/utils.hpp"
 namespace network {
 AsioNetworkModel::AsioNetworkModel(common::MessageQueue& message_queue)
     : io_context_()
@@ -60,6 +61,7 @@ bool AsioNetworkModel::doConnect(const boost::asio::ip::tcp::endpoint& endpoint)
                 if (!error) {
                     doRead();
                 } else {
+                    // handleError(fmt::format("连接失败: {}", error.message()));
                     handleError(fmt::format("连接失败: {}", error.message()));
                 }
             }));
@@ -106,6 +108,7 @@ void AsioNetworkModel::doRead() {
 }
 
 void AsioNetworkModel::handleError(std::string_view error_msg) {
+    spdlog::error("[{}]: 网络错误: {}, 请检查网络连接, 程序需要重新启动", common::getCurrentTimestamp(), error_msg);
     auto error_event = std::make_shared<common::NetworkErrorEvent>();
     error_event->message = std::string{error_msg};
     common::EventBus::getInstance().publish(error_event);
