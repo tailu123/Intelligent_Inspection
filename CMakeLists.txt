@@ -1,49 +1,33 @@
 cmake_minimum_required(VERSION 3.10)
-project(x30_inspection_system VERSION 1.0)
+project(x30_inspection_system
+    VERSION 1.0
+    DESCRIPTION "X30 Inspection System"
+    LANGUAGES CXX
+)
 
+# 基础配置
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# 设置编译选项
+# 设置默认构建类型
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
-# 添加 libhv 子模块
-# add_subdirectory(third_party/libhv)
 
-# 添加 spdlog 子模块的源文件目录
-add_subdirectory(third_party/spdlog)
-
-# 添加编译选项
-add_compile_options(-Wall -Wextra)
-
-
-# 查找Boost库
-find_package(Boost REQUIRED COMPONENTS system filesystem thread)
-# 查找nlohmann_json库
-find_package(nlohmann_json)
-# 查找fmt库
-find_package(fmt)
-
-# 添加include目录
-include_directories(
-    ${PROJECT_SOURCE_DIR}/include
-    ${PROJECT_SOURCE_DIR}/third_party
-    ${Boost_INCLUDE_DIRS}
-    # ${libhv_INCLUDE_DIRS}
+# 查找依赖库
+find_package(Boost REQUIRED COMPONENTS
+    system
+    filesystem
+    thread
 )
+find_package(nlohmann_json REQUIRED)
+find_package(spdlog REQUIRED)
+find_path(rapidxml/rapidxml_utils.hpp REQUIRED)
 
-# 添加源文件
-file(GLOB_RECURSE SOURCES
-    "src/*.cpp"
-)
-
-# 排除测试文件
-list(FILTER SOURCES EXCLUDE REGEX ".*test/.*\\.cpp$")
-
-# 创建主可执行文件
-add_executable(${PROJECT_NAME}
+# 源文件配置
+set(SOURCES
     src/main.cpp
     src/application/x30_inspection_system.cpp
     src/common/message_queue.cpp
@@ -62,15 +46,37 @@ add_executable(${PROJECT_NAME}
     src/common/Logger.cpp
 )
 
-# 链接主程序
-target_link_libraries(${PROJECT_NAME}
+# 创建主可执行文件
+add_executable(${PROJECT_NAME} ${SOURCES})
+
+# 设置包含目录
+target_include_directories(${PROJECT_NAME}
     PRIVATE
-    ${Boost_LIBRARIES}
-    pthread
-    nlohmann_json::nlohmann_json
-    # fmt
-    spdlog::spdlog
+        ${PROJECT_SOURCE_DIR}/include
 )
 
-# 可选：设置 C++ 编译选项
-target_compile_options(${PROJECT_NAME} PRIVATE -Wall)
+# 设置编译选项
+target_compile_options(${PROJECT_NAME}
+    PRIVATE
+        -Wall
+        -Wextra
+        -Wpedantic
+        $<$<CONFIG:Debug>:-g -O0>
+        $<$<CONFIG:Release>:-O3>
+)
+
+# 链接依赖库
+target_link_libraries(${PROJECT_NAME}
+    PRIVATE
+        Boost::system
+        Boost::filesystem
+        Boost::thread
+        nlohmann_json::nlohmann_json
+        spdlog::spdlog
+        pthread
+)
+
+# 安装配置
+install(TARGETS ${PROJECT_NAME}
+    RUNTIME DESTINATION bin
+)
